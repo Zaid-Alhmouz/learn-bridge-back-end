@@ -2,6 +2,8 @@ package com.learnbridge.learn_bridge_back_end.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "instructor")
 public class Instructor {
@@ -20,6 +22,15 @@ public class Instructor {
 
     @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "bio")
+    private String instructorBio;
+
+    @Column(name = "avg_price")
+    private BigDecimal avgPrice;
+
+    @Column(name = "university_info")
+    private String universityInfo;
 
     public Long getInstructorId() {
         return instructorId;
@@ -50,12 +61,40 @@ public class Instructor {
         this.lastName = lastName;
     }
 
+    public String getInstructorBio() {
+        return instructorBio;
+    }
+
+    public void setInstructorBio(String instructorBio) {
+        this.instructorBio = instructorBio;
+    }
+
+    public BigDecimal getAvgPrice() {
+        return avgPrice;
+    }
+
+    public void setAvgPrice(BigDecimal avgPrice) {
+        this.avgPrice = avgPrice;
+    }
+
+    public String getUniversityInfo() {
+        return universityInfo;
+    }
+
+    public void setUniversityInfo(String universityInfo) {
+        this.universityInfo = universityInfo;
+    }
+
     @Override
     public String toString() {
         return "Instructor{" +
                 "instructorId=" + instructorId +
+                ", user=" + user +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", instructorBio='" + instructorBio + '\'' +
+                ", avgPrice=" + avgPrice +
+                ", universityInfo='" + universityInfo + '\'' +
                 '}';
     }
 }

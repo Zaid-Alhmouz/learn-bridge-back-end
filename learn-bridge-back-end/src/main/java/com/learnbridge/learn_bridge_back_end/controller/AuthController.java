@@ -1,8 +1,12 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
 
+import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
+import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
 import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
 import com.learnbridge.learn_bridge_back_end.dto.UserRegistrationRequest;
+import com.learnbridge.learn_bridge_back_end.entity.Instructor;
+import com.learnbridge.learn_bridge_back_end.entity.Learner;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import com.learnbridge.learn_bridge_back_end.entity.UserRole;
 import jakarta.validation.Valid;
@@ -26,6 +30,12 @@ public class AuthController {
     private UserDAO userDAO;
 
     @Autowired
+    private InstructorDAO instructorDAO;
+
+    @Autowired
+    private LearnerDAO learnerDAO;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
@@ -41,27 +51,58 @@ public class AuthController {
         }
 
         // create new user
-
         User user = new User();
-        user.setName(request.getName());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        if (request.getRole() != null) {
-            try {
-                user.setUserRole(UserRole.valueOf(request.getRole()));
-            } catch (IllegalArgumentException e) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "Invalid role specified");
-                return ResponseEntity.badRequest().body(error);
+        // validate role and handle it
+        UserRole role;
+        try{
+            role = UserRole.valueOf(request.getRole());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid role"));
+        }
+        user.setUserRole(role);
+
+        // save user
+        userDAO.saveUser(user);
+
+        // create Learner/Instructor profile
+        if(role == UserRole.INSTRUCTOR)
+        {
+            // validate Instructor fields
+            if(request.getBio() == null || request.getUniversityInfo() == null || request.getAvgPrice() == null)
+            {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid Instructor fields, fields required"));
             }
-        } else {
-            user.setUserRole(UserRole.LEARNER);
+
+            Instructor instructor = new Instructor();
+            instructor.setUser(user);
+            instructor.setFirstName(request.getFirstName());
+            instructor.setLastName(request.getLastName());
+            instructor.setInstructorBio(request.getBio());
+            instructor.setUniversityInfo(request.getUniversityInfo());
+            instructor.setAvgPrice(request.getAvgPrice());
+
+            // save instructor
+            instructorDAO.saveInstructor(instructor);
         }
 
+        else if(role == UserRole.LEARNER)
+        {
+            Learner learner = new Learner();
+            learner.setUser(user);
+            learner.setFirstName(request.getFirstName());
+            learner.setLastName(request.getLastName());
 
-        userDAO.saveUser(user);
-        return ResponseEntity.ok().body(Map.of("message", "User registered successfully")); // Return JSON
+            // save learner
+            learnerDAO.saveLearner(learner);
+        }
+
+        return ResponseEntity.ok().body(Map.of("message", "User registered successfully"));
     }
 
     @PostMapping("/admin/create-admin")
@@ -72,7 +113,8 @@ public class AuthController {
         }
 
         User admin = new User();
-        admin.setName(request.getName());
+        admin.setFirstName(request.getFirstName());
+        admin.setLastName(request.getLastName());
         admin.setEmail(request.getEmail());
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
         admin.setUserRole(UserRole.ADMIN);

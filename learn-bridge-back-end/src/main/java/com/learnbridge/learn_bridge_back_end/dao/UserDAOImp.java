@@ -52,6 +52,11 @@ public class UserDAOImp implements UserDAO {
     }
 
     @Override
+    public User findUserById(Long userId) {
+        return entityManager.find(User.class, userId);
+    }
+
+    @Override
     public List<User> findAllUsers() {
        return entityManager.createQuery("from User", User.class).getResultList();
     }

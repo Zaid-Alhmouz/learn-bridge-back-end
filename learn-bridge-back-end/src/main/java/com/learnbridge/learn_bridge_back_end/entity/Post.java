@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -13,7 +14,6 @@ import java.util.Date;
 public class Post {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private Long postId;
 
@@ -26,8 +26,8 @@ public class Post {
     @JoinColumn(name = "author_id", referencedColumnName = "user_id", insertable = false, updatable = false)
     private User author;
 
-    @Column(name = "approval_date", nullable = false)
-    private LocalDate approvalDate;
+    @Column(name = "approval_date", nullable = true)
+    private LocalDateTime approvalDate;
 
     @Column(name = "price",nullable = false, precision = 6, scale = 2)
     private BigDecimal price;
@@ -50,8 +50,14 @@ public class Post {
         return authorId;
     }
 
+    public void setAuthorId(Long authorId) {}
+
     public Long getPostId() {
         return postId;
+    }
+
+    public void setPostId(Long postId) {
+        this.postId = postId;
     }
 
     public User getAuthor() {
@@ -62,11 +68,11 @@ public class Post {
         this.author = user;
     }
 
-    public LocalDate getApprovalDate() {
+    public LocalDateTime getApprovalDate() {
         return approvalDate;
     }
 
-    public void setApprovalDate(LocalDate approvalDate) {
+    public void setApprovalDate(LocalDateTime approvalDate) {
         this.approvalDate = approvalDate;
     }
 

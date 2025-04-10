@@ -16,5 +16,6 @@ public interface PostDAO {
     List<Post> findPendingPostsByUserId(Long userId);
     List<Post> findApprovedPostsByCategory(String category);
     List<Post> findPendingPostsByCategory(String category);
+    Long findMaxPostIdByAuthor(Long authorId);
 
 }

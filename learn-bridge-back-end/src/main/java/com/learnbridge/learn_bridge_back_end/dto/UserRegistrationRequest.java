@@ -4,11 +4,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Email;
 
+import java.math.BigDecimal;
+
 public class UserRegistrationRequest {
 
 
-    @NotBlank(message = "Name is required")
-    private String name;
+    @NotBlank(message = "First name is required")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    private String lastName;
 
     @NotBlank(message = "email is required")
     @Email(message = "Invalid email format")
@@ -24,12 +29,26 @@ public class UserRegistrationRequest {
     @NotBlank(message = "Role is required")
     private String role;
 
-    public String getName() {
-        return name;
+    private String bio;
+
+    private String universityInfo;
+
+    private BigDecimal avgPrice;
+
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
@@ -54,5 +73,29 @@ public class UserRegistrationRequest {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getUniversityInfo() {
+        return universityInfo;
+    }
+
+    public void setUniversityInfo(String universityInfo) {
+        this.universityInfo = universityInfo;
+    }
+
+    public BigDecimal getAvgPrice() {
+        return avgPrice;
+    }
+
+    public void setAvgPrice(BigDecimal avgPrice) {
+        this.avgPrice = avgPrice;
     }
 }

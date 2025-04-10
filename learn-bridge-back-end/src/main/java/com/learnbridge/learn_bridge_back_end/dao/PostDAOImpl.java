@@ -91,4 +91,14 @@ public class PostDAOImpl implements PostDAO {
         query.setParameter("category", category);
         return query.getResultList();
     }
+
+    @Override
+    public Long findMaxPostIdByAuthor(Long authorId) {
+
+        String sql = "select MAX(p.postId) from Post p where p.authorId = :authorId";
+
+        Long maxPostId = (Long) entityManager.createQuery(sql, Long.class).setParameter("authorId", authorId).getSingleResult();
+
+        return maxPostId;
+    }
 }

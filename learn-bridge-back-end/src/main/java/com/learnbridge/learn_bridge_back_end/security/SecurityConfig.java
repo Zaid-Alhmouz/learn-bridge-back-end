@@ -1,7 +1,7 @@
 package com.learnbridge.learn_bridge_back_end.security;
 
 
-import com.learnbridge.learn_bridge_back_end.service.CustomOAuth2UserService;
+//import com.learnbridge.learn_bridge_back_end.service.CustomOAuth2UserService;
 import com.learnbridge.learn_bridge_back_end.service.CustomUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -29,13 +29,13 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomUserDetailService customUserDetailService;
-    private final CustomOAuth2UserService customOAuth2UserService;
+//    private final CustomOAuth2UserService customOAuth2UserService;
 
 
     @Autowired
-    public SecurityConfig(CustomUserDetailService customUserDetailService, @Lazy CustomOAuth2UserService customOAuth2UserService) {
+    public SecurityConfig(@Lazy CustomUserDetailService customUserDetailService) {
         this.customUserDetailService = customUserDetailService;
-        this.customOAuth2UserService = customOAuth2UserService;
+//        this.customOAuth2UserService = customOAuth2UserService;
     }
 
 
@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register", "/api/login", "/oauth2/**").permitAll()
+                        .requestMatchers("/api/register", "/api/login", "/oauth2/**", "/api/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -98,6 +98,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
