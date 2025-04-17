@@ -1,0 +1,87 @@
+package com.learnbridge.learn_bridge_back_end.service;
+
+import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
+import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
+import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
+import com.learnbridge.learn_bridge_back_end.dto.PersonalInfoDTO;
+import com.learnbridge.learn_bridge_back_end.entity.Instructor;
+import com.learnbridge.learn_bridge_back_end.entity.Learner;
+import com.learnbridge.learn_bridge_back_end.entity.User;
+import com.learnbridge.learn_bridge_back_end.entity.UserRole;
+import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+@Service
+public class PersonalInfoService {
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
+    private InstructorDAO instructorDAO;
+
+    @Autowired
+    private LearnerDAO learnerDAO;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // make sure this is properly configured
+
+    public void editPersonalInfo(PersonalInfoDTO personalInfoDTO, SecurityUser loggedUser) {
+        // Retrieve the current user from the database
+        Long userId = loggedUser.getUser().getId();
+        User existingUser = userDAO.findUserById(userId);
+        if (existingUser == null) {
+            throw new RuntimeException("User not found for id: " + userId);
+        }
+
+        // Optionally, check if email changed and if new email is already taken
+        if (!existingUser.getEmail().equals(personalInfoDTO.getEmail())) {
+            User userWithNewEmail = userDAO.findUserByEmail(personalInfoDTO.getEmail());
+            if (userWithNewEmail != null) {
+                throw new RuntimeException("The email is already in use by another account.");
+            }
+            existingUser.setEmail(personalInfoDTO.getEmail());
+        }
+
+        // Update other user fields with new values from the DTO.
+        existingUser.setFirstName(personalInfoDTO.getFirstName());
+        existingUser.setLastName(personalInfoDTO.getLastName());
+        // Update password only if a new one is provided (and encode it)
+        if (personalInfoDTO.getPassword() != null && !personalInfoDTO.getPassword().isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(personalInfoDTO.getPassword());
+            existingUser.setPassword(encodedPassword);
+        }
+
+        // Save the updated user info
+        userDAO.updateUser(existingUser);
+
+        // Depending on the user's role, update Learner or Instructor details:
+        if (existingUser.getUserRole() == UserRole.LEARNER) {
+            Learner existingLearner = learnerDAO.findLearnerById(userId);
+            if (existingLearner == null) {
+                throw new RuntimeException("Learner not found for user id: " + userId);
+            }
+            existingLearner.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
+            existingLearner.setPersonalImage(personalInfoDTO.getPersonalImage());
+            // Update other learner-specific fields, if any
+            learnerDAO.updateLearner(existingLearner);
+        } else if (existingUser.getUserRole() == UserRole.INSTRUCTOR) {
+            Instructor existingInstructor = instructorDAO.findInstructorById(userId);
+            if (existingInstructor == null) {
+                throw new RuntimeException("Instructor not found for user id: " + userId);
+            }
+            existingInstructor.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
+            existingInstructor.setUniversityInfo(personalInfoDTO.getUniversityInfo());
+            existingInstructor.setInstructorBio(personalInfoDTO.getBio());
+            existingInstructor.setAvgPrice(personalInfoDTO.getAvgPrice());
+            existingInstructor.setInstructorImage(personalInfoDTO.getPersonalImage());
+            instructorDAO.updateInstructor(existingInstructor);
+        }
+    }
+}

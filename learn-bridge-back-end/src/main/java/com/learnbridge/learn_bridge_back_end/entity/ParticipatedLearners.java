@@ -4,10 +4,17 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "participated_learners")
+@IdClass(ParticipatedLearnerId.class)
 public class ParticipatedLearners {
 
-    @EmbeddedId
-    private ParticipatedLearnerId participatedLearnerId;
+    @Id
+    @Column(name = "chat_id")
+    private Long chatId;
+
+    @Id
+    @Column(name = "learner_id")
+    private Long learnerId;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("chatId")
@@ -20,16 +27,7 @@ public class ParticipatedLearners {
     private Learner learner;
 
 
-    public ParticipatedLearners() {}
 
-    public ParticipatedLearners(Chat chat, Learner learner) {
-        this.chat = chat;
-        this.learner = learner;
-        this.participatedLearnerId = new ParticipatedLearnerId(chat.getChatId(), learner.getLearnerId());
-    }
-
-
-    public ParticipatedLearnerId getId() { return participatedLearnerId; }
     public Chat getChat() { return chat; }
     public Learner getLearner() { return learner; }
     public void setChat(Chat chat) { this.chat = chat; }

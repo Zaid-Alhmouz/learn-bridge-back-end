@@ -4,31 +4,30 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class PostId implements Serializable {
-    private Long postId;
     private Long authorId;
+    private Long postId;
 
     public PostId() {}
 
-    public PostId(Long postId, Long authorId) {
-        this.postId = postId;
+    public PostId(Long authorId, Long postId) {
         this.authorId = authorId;
+        this.postId = postId;
     }
 
-    // Required getters
-    public Long getPostId() { return postId; }
     public Long getAuthorId() { return authorId; }
+    public Long getPostId() { return postId; }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PostId postId1 = (PostId) o;
-        return Objects.equals(postId, postId1.postId) &&
-                Objects.equals(authorId, postId1.authorId);
+        if (!(o instanceof PostId)) return false;
+        PostId that = (PostId) o;
+        return Objects.equals(authorId, that.authorId) &&
+                Objects.equals(postId, that.postId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(postId, authorId);
+        return Objects.hash(authorId, postId);
     }
 }

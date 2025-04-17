@@ -17,6 +17,9 @@ public class Notifications {
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agreement_id", referencedColumnName = "agreement_id")
+    private Agreement agreement;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "read_status")

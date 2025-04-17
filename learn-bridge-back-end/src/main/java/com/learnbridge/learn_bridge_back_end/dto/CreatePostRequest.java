@@ -5,20 +5,13 @@ import java.math.BigDecimal;
 
 public class CreatePostRequest {
 
-    private Long authorId;
 
     private String subject;
     private String content;
     private String category;
     private BigDecimal price;
 
-    public Long getAuthorId() {
-        return authorId;
-    }
 
-    public void setAuthorId(Long authorId) {
-        this.authorId = authorId;
-    }
 
     public String getSubject() {
         return subject;

@@ -1,42 +1,32 @@
-package com.learnbridge.learn_bridge_back_end.entity;
+package com.learnbridge.learn_bridge_back_end.dto;
 
-import jakarta.persistence.*;
+import com.learnbridge.learn_bridge_back_end.entity.AccountStatus;
+import com.learnbridge.learn_bridge_back_end.entity.User;
 
-@Entity
-@Table(name = "user")
-public class User {
+public class UserDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
     private Long userId;
-
-    @Column(name = "first_name")
     private String firstName;
-
-    @Column(name = "last_name")
     private String lastName;
-
-    @Column(name = "email")
     private String email;
-
-    @Column(name = "password")
-    private String password;
-
-    @Column(name = "role")
-    @Enumerated(EnumType.STRING)
-    private UserRole userRole;
-
-    @Column(name = "account_status")
-    @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus;
 
+    public UserDTO() {}
 
+    public UserDTO(User user) {
+        this.userId = user.getId();
+        this.firstName = user.getFirstName();
+        this.lastName = user.getLastName();
+        this.email = user.getEmail();
+        this.accountStatus = user.getAccountStatus();
+    }
 
-
-
-    public Long getId() {
+    public Long getUserId() {
         return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getFirstName() {
@@ -63,22 +53,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public UserRole getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(UserRole userRole) {
-        this.userRole = userRole;
-    }
-
     public AccountStatus getAccountStatus() {
         return accountStatus;
     }
@@ -89,13 +63,11 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return "UserDTO{" +
                 "userId=" + userId +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", userRole=" + userRole +
                 ", accountStatus=" + accountStatus +
                 '}';
     }

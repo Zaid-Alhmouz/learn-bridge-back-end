@@ -1,42 +1,18 @@
 package com.learnbridge.learn_bridge_back_end.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Email;
-
 import java.math.BigDecimal;
 
-public class UserRegistrationRequest {
+public class PersonalInfoDTO {
 
-
-    @NotBlank(message = "First name is required")
     private String firstName;
-
-    @NotBlank(message = "Last name is required")
     private String lastName;
-
-    @NotBlank(message = "email is required")
-    @Email(message = "Invalid email format")
     private String email;
-
-
-    @NotBlank(message = "password is required")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,18}$",
-            message = "Password must be 6-18 characters, with at least one letter and one number")
     private String password;
-
-
-    @NotBlank(message = "Role is required")
-    private String role;
-
-    @NotBlank(message = "favourite category required")
     private String favouriteCategory;
-
-    private String bio;
-
     private String universityInfo;
-
+    private String bio;
     private BigDecimal avgPrice;
+    private byte[] personalImage;
 
     public String getFirstName() {
         return firstName;
@@ -70,20 +46,12 @@ public class UserRegistrationRequest {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
+    public String getFavouriteCategory() {
+        return favouriteCategory;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
+    public void setFavouriteCategory(String favouriteCategory) {
+        this.favouriteCategory = favouriteCategory;
     }
 
     public String getUniversityInfo() {
@@ -94,6 +62,14 @@ public class UserRegistrationRequest {
         this.universityInfo = universityInfo;
     }
 
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
     public BigDecimal getAvgPrice() {
         return avgPrice;
     }
@@ -102,11 +78,11 @@ public class UserRegistrationRequest {
         this.avgPrice = avgPrice;
     }
 
-    public String getFavouriteCategory() {
-        return favouriteCategory;
+    public byte[] getPersonalImage() {
+        return personalImage;
     }
 
-    public void setFavouriteCategory(String favouriteCategory) {
-        this.favouriteCategory = favouriteCategory;
+    public void setPersonalImage(byte[] personalImage) {
+        this.personalImage = personalImage;
     }
 }

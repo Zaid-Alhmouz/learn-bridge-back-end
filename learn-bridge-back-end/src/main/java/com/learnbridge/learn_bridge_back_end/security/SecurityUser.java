@@ -1,5 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.security;
 
+import com.learnbridge.learn_bridge_back_end.entity.AccountStatus;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,7 +19,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.getUserRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name()));
     }
 
     @Override
@@ -31,22 +32,31 @@ public class SecurityUser implements UserDetails {
         return user.getEmail(); // we use email here for authentication instead of the actual username
     }
 
+    public User getUser() {
+        return user;
+    }
+
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
+    public boolean isEnabled() {
+        // Only ACTIVE users can authenticate
+        return user.getAccountStatus() == AccountStatus.ACTIVE;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        // BLOCKED users are treated as “locked”
+        return user.getAccountStatus() != AccountStatus.BLOCKED;
     }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
+    public boolean isAccountNonExpired() {
+        // Optionally, treat DELETED or DISABLED as expired
+        return user.getAccountStatus() == AccountStatus.ACTIVE;
     }
+
+
     @Override
-    public boolean isEnabled() {
+    public boolean isCredentialsNonExpired() {
         return true;
     }
 }

@@ -22,6 +22,10 @@ public class Chat {
     @JoinColumn(name = "instructor_id", referencedColumnName = "user_id")
     private User instructor;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "agreement_id", referencedColumnName = "agreement_id")
+    private Agreement agreement;
+
     @OneToMany(mappedBy = "chat")
     private List<ParticipatedLearners> participants;
 

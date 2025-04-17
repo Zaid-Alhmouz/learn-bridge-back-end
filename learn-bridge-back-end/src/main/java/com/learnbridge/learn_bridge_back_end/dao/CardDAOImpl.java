@@ -65,7 +65,7 @@ public class CardDAOImpl implements CardDAO {
         TypedQuery<Card> query = entityManager.createQuery(sqlStatement, Card.class);
         query.setParameter("userId", userId);
         List<Card> cards = query.getResultList();
-        return cards.isEmpty() ? null : cards;
+        return cards;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.learnbridge.learn_bridge_back_end.entity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 @Entity
 @Table(name = "instructor")
@@ -31,6 +32,12 @@ public class Instructor {
 
     @Column(name = "university_info")
     private String universityInfo;
+
+    @Column(name = "instructor_image")
+    private byte[] instructorImage;
+
+    @Column(name = "favourite_category")
+    private String favouriteCategory;
 
     public Long getInstructorId() {
         return instructorId;
@@ -85,6 +92,22 @@ public class Instructor {
         this.universityInfo = universityInfo;
     }
 
+    public byte[] getInstructorImage() {
+        return instructorImage;
+    }
+
+    public void setInstructorImage(byte[] instructorImage) {
+        this.instructorImage = instructorImage;
+    }
+
+    public String getFavouriteCategory() {
+        return favouriteCategory;
+    }
+
+    public void setFavouriteCategory(String favouriteCategory) {
+        this.favouriteCategory = favouriteCategory;
+    }
+
     @Override
     public String toString() {
         return "Instructor{" +
@@ -95,6 +118,8 @@ public class Instructor {
                 ", instructorBio='" + instructorBio + '\'' +
                 ", avgPrice=" + avgPrice +
                 ", universityInfo='" + universityInfo + '\'' +
+                ", instructorImage=" + Arrays.toString(instructorImage) +
+                ", favouriteCategory='" + favouriteCategory + '\'' +
                 '}';
     }
 }

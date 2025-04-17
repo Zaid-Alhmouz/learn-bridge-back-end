@@ -35,7 +35,7 @@ public class LearnerDAOImpl implements LearnerDAO {
     }
 
     @Override
-    public Learner getLearnerById(Long learnerId) {
+    public Learner findLearnerById(Long learnerId) {
         return entityManager.find(Learner.class, learnerId);
     }
 

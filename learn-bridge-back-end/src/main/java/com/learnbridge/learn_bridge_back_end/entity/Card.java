@@ -1,9 +1,10 @@
 package com.learnbridge.learn_bridge_back_end.entity;
 
 
-
+import com.learnbridge.learn_bridge_back_end.converter.YearMonthAttributeConverter;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Entity
 @Table(name = "card")
@@ -18,7 +19,8 @@ public class Card {
     private String cardNumber;
 
     @Column(name = "expire_date", nullable = false)
-    private LocalDate expireDate;
+    @Convert(converter = YearMonthAttributeConverter.class)
+    private YearMonth expireDate;
 
     @Column(name = "holder_name", nullable = false, length = 100)
     private String holderName;
@@ -31,6 +33,9 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name =  "default_card")
+    private boolean defaultCard;
+
 
 
     public Long getCardId() { return cardId; }
@@ -39,9 +44,9 @@ public class Card {
 
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
 
-    public LocalDate getExpireDate() { return expireDate; }
+    public YearMonth getExpireDate() { return expireDate; }
 
-    public void setExpireDate(LocalDate expireDate) { this.expireDate = expireDate; }
+    public void setExpireDate(YearMonth expireDate) { this.expireDate = expireDate; }
 
     public String getHolderName() { return holderName; }
 
@@ -55,14 +60,24 @@ public class Card {
 
     public void setUser(User user) { this.user = user; }
 
+    public boolean isDefaultCard() {
+        return defaultCard;
+    }
+
+    public void setDefaultCard(boolean defaultCard) {
+        this.defaultCard = defaultCard;
+    }
+
     @Override
     public String toString() {
         return "Card{" +
-                "cardNumber='" + cardNumber + '\'' +
+                "cardId=" + cardId +
+                ", cardNumber='" + cardNumber + '\'' +
                 ", expireDate=" + expireDate +
                 ", holderName='" + holderName + '\'' +
                 ", cardType=" + cardType +
-                ", cardId=" + cardId +
+                ", user=" + user +
+                ", defaultCard=" + defaultCard +
                 '}';
     }
 }

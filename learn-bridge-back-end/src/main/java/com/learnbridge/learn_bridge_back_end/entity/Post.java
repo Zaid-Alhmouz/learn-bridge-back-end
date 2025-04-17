@@ -14,12 +14,12 @@ import java.util.Date;
 public class Post {
 
     @Id
-    @Column
-    private Long postId;
-
-    @Id
     @Column(name = "author_id")
     private Long authorId;
+
+    @Id
+    @Column(name = "post_id")
+    private Long postId;
 
     @MapsId("authorId")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,7 +50,9 @@ public class Post {
         return authorId;
     }
 
-    public void setAuthorId(Long authorId) {}
+    public void setAuthorId(Long authorId) {
+        this.authorId = authorId;
+    }
 
     public Long getPostId() {
         return postId;

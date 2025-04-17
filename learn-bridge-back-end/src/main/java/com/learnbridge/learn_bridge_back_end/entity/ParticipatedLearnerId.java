@@ -5,7 +5,7 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Embeddable
+
 public class ParticipatedLearnerId implements Serializable {
     private Long chatId;
     private Long learnerId;

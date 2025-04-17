@@ -107,6 +107,8 @@ public class Report {
         this.reportType = reportType;
     }
 
+
+
     @Override
     public String toString() {
         return "Report{" +

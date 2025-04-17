@@ -1,10 +1,12 @@
 package com.learnbridge.learn_bridge_back_end.dao;
 
 import com.learnbridge.learn_bridge_back_end.entity.Post;
+import com.learnbridge.learn_bridge_back_end.entity.PostId;
 import com.learnbridge.learn_bridge_back_end.entity.PostStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +17,6 @@ public class PostDAOImpl implements PostDAO {
 
     @PersistenceContext
     private EntityManager entityManager;
-
 
     @Override
     @Transactional
@@ -31,17 +32,17 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     @Transactional
-    public void deletePost(Long postId) {
+    public void deletePost(PostId postId) {
         Post post = entityManager.find(Post.class, postId);
-        entityManager.remove(entityManager.contains(post) ? post : entityManager.merge(post));
+        if (post != null) {
+            entityManager.remove(entityManager.contains(post) ? post : entityManager.merge(post));
+        }
     }
 
     @Override
-    public Post findPostById(Long postId) {
+    public Post findPostById(PostId postId) {
         return entityManager.find(Post.class, postId);
     }
-
-
 
     @Override
     public List<Post> findAllPosts() {
@@ -75,6 +76,14 @@ public class PostDAOImpl implements PostDAO {
     }
 
     @Override
+    public List<Post> findAllPostsByUserId(Long userId) {
+        String sql = "select p from Post p where p.author.userId = :UserId";
+        Query query = entityManager.createQuery(sql);
+        query.setParameter("UserId", userId);
+        return query.getResultList();
+    }
+
+    @Override
     public List<Post> findApprovedPostsByCategory(String category) {
         String sql = "select p from Post p where p.postStatus = :PostStatus and p.category = :category";
         Query query = entityManager.createQuery(sql);
@@ -93,12 +102,47 @@ public class PostDAOImpl implements PostDAO {
     }
 
     @Override
-    public Long findMaxPostIdByAuthor(Long authorId) {
-
-        String sql = "select MAX(p.postId) from Post p where p.authorId = :authorId";
-
-        Long maxPostId = (Long) entityManager.createQuery(sql, Long.class).setParameter("authorId", authorId).getSingleResult();
-
+    public Long findMaxPostIdByAuthorId(Long authorId) {
+        String sql = "select MAX(p.postId) from Post p WHERE p.authorId = :authorId";
+        Long maxPostId = (Long) entityManager.createQuery(sql, Long.class)
+                .setParameter("authorId", authorId)
+                .getSingleResult();
         return maxPostId;
+    }
+
+    @Override
+    public List<Post> findAllPostsByFavouriteCategory(String category) {
+        String sql = "select p from Post p where p.category = :category";
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
+        query.setParameter("category", category);
+        if(query.getResultList().isEmpty()){
+            return null;
+        }
+        else
+            return query.getResultList();
+    }
+
+    @Override
+    public List<Post> searchPosts(String keyword) {
+        String searchKeyword = "%" + keyword.toLowerCase() + "%";
+     
+        String sql = "select p from Post p where (lower(p.subject) like :keyword " +
+                "or lower(p.content) like :keyword " +
+                "or lower(p.category) like :keyword) " +
+                "and p.postStatus = :postStatus";
+
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
+        query.setParameter("keyword", searchKeyword);
+        query.setParameter("postStatus", PostStatus.ACCEPTED);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Post> findAllPendingPosts() {
+
+        String sqlStatement = "select p from Post p where p.postStatus = :postStatus";
+        TypedQuery<Post> pendingPosts = entityManager.createQuery(sqlStatement, Post.class);
+        pendingPosts.setParameter("postStatus", PostStatus.PENDING);
+        return pendingPosts.getResultList();
     }
 }

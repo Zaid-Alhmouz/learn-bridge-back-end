@@ -3,7 +3,10 @@ package com.learnbridge.learn_bridge_back_end.entity;
 public enum CardType {
 
     VISA,
-    MASTERCARD
+    MASTERCARD,
+    AMERICAN_EXPRESS,
+    DISCOVER,
+    UNKNOWN
 
 }
 

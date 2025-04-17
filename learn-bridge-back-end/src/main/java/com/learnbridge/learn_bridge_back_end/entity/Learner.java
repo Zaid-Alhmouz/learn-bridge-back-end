@@ -21,6 +21,12 @@ public class Learner {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "favourite_category")
+    private String favouriteCategory;
+
+    @Column(name = "personal_image")
+    private byte[] personalImage;
+
     public Long getLearnerId() {
         return learnerId;
     }
@@ -50,12 +56,30 @@ public class Learner {
         this.lastName = lastName;
     }
 
+    public String getFavouriteCategory() {
+        return favouriteCategory;
+    }
+
+    public void setFavouriteCategory(String favouriteCategory) {
+        this.favouriteCategory = favouriteCategory;
+    }
+
+    public byte[] getPersonalImage() {
+        return personalImage;
+    }
+
+    public void setPersonalImage(byte[] personalImage) {
+        this.personalImage = personalImage;
+    }
+
     @Override
     public String toString() {
         return "Learner{" +
                 "learnerId=" + learnerId +
+                ", user=" + user +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", favouriteCategory='" + favouriteCategory + '\'' +
                 '}';
     }
 }

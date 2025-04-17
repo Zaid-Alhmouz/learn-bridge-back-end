@@ -1,14 +1,12 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
 
+import com.learnbridge.learn_bridge_back_end.dao.AdminDAO;
 import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
 import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
 import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
 import com.learnbridge.learn_bridge_back_end.dto.UserRegistrationRequest;
-import com.learnbridge.learn_bridge_back_end.entity.Instructor;
-import com.learnbridge.learn_bridge_back_end.entity.Learner;
-import com.learnbridge.learn_bridge_back_end.entity.User;
-import com.learnbridge.learn_bridge_back_end.entity.UserRole;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +34,9 @@ public class AuthController {
     private LearnerDAO learnerDAO;
 
     @Autowired
+    private AdminDAO adminDAO;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
@@ -56,7 +57,9 @@ public class AuthController {
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setAccountStatus(AccountStatus.ACTIVE);
+
+
 
         // validate role and handle it
         UserRole role;
@@ -67,14 +70,12 @@ public class AuthController {
         }
         user.setUserRole(role);
 
-        // save user
-        userDAO.saveUser(user);
 
         // create Learner/Instructor profile
         if(role == UserRole.INSTRUCTOR)
         {
             // validate Instructor fields
-            if(request.getBio() == null || request.getUniversityInfo() == null || request.getAvgPrice() == null)
+            if(request.getBio() == null || request.getUniversityInfo() == null || request.getAvgPrice() == null || request.getFavouriteCategory() == null)
             {
                 return ResponseEntity.badRequest().body(Map.of("message", "Invalid Instructor fields, fields required"));
             }
@@ -86,6 +87,7 @@ public class AuthController {
             instructor.setInstructorBio(request.getBio());
             instructor.setUniversityInfo(request.getUniversityInfo());
             instructor.setAvgPrice(request.getAvgPrice());
+            instructor.setFavouriteCategory(request.getFavouriteCategory());
 
             // save instructor
             instructorDAO.saveInstructor(instructor);
@@ -97,11 +99,17 @@ public class AuthController {
             learner.setUser(user);
             learner.setFirstName(request.getFirstName());
             learner.setLastName(request.getLastName());
+            learner.setFavouriteCategory(request.getFavouriteCategory());
 
             // save learner
             learnerDAO.saveLearner(learner);
         }
-
+        else if(role == UserRole.ADMIN)
+        {
+            throw new RuntimeException("Unauthorized");
+        }
+        // save user
+        userDAO.saveUser(user);
         return ResponseEntity.ok().body(Map.of("message", "User registered successfully"));
     }
 
@@ -118,8 +126,17 @@ public class AuthController {
         admin.setEmail(request.getEmail());
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
         admin.setUserRole(UserRole.ADMIN);
+        admin.setAccountStatus(AccountStatus.ACTIVE);
+
+        Admin registeredAdmin = new Admin();
+        registeredAdmin.setUser(admin);
+        registeredAdmin.setFirstName(request.getFirstName());
+        registeredAdmin.setLastName(request.getLastName());
+
 
         userDAO.saveUser(admin);
+        adminDAO.saveAdmin(registeredAdmin);
+
         return ResponseEntity.ok("Admin created successfully");
     }
 }

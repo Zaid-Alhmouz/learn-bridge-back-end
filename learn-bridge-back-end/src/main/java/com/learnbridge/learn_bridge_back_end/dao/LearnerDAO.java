@@ -9,6 +9,6 @@ public interface LearnerDAO {
     void saveLearner(Learner learner);
     void updateLearner(Learner learner);
     void deleteLearner(Long learnerId);
-    Learner getLearnerById(Long learnerId);
+    Learner findLearnerById(Long learnerId);
     List<Learner> findAllLearners();
 }
