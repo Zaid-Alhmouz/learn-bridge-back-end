@@ -79,6 +79,20 @@ public class PostController {
         }
     }
 
+    @GetMapping("/selected-category/{selectedCategory}")
+    public ResponseEntity<List<PostDTO>> getFavouriteCategoryPosts(@PathVariable String selectedCategory) {
+        
+        List<PostDTO> favouriteCategoryPosts = postService.getPostsBySelectedCategory(selectedCategory);
+
+        if(favouriteCategoryPosts == null || favouriteCategoryPosts.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        else{
+            return ResponseEntity.ok(favouriteCategoryPosts);
+        }
+    }
+
+
     @PutMapping("/edit-post")
     public ResponseEntity<?> editPost(@AuthenticationPrincipal SecurityUser loggedUser, @RequestBody PostDTO editPostRequest)
     {

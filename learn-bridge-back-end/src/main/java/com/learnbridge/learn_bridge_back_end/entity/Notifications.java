@@ -74,6 +74,14 @@ public class Notifications {
         this.timestamp = timestamp;
     }
 
+    public Agreement getAgreement() {
+        return agreement;
+    }
+
+    public void setAgreement(Agreement agreement) {
+        this.agreement = agreement;
+    }
+
     @Override
     public String toString() {
         return "Notifications{" +

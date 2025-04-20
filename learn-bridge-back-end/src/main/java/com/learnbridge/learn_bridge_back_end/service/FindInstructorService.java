@@ -27,6 +27,7 @@ public class FindInstructorService {
     private LearnerDAO learnerDAO;
 
 
+    // default instructors based on user's favourite category
     public List<InstructorDTO> findAllInstructorsWithFavouriteLearnerCategory(SecurityUser loggedUser) {
 
         Long userId = loggedUser.getUser().getId();
@@ -37,12 +38,25 @@ public class FindInstructorService {
         }
 
         String learnerFavouriteCategory = learner.getFavouriteCategory();
-        if (learnerFavouriteCategory == null) {
-
-        }
 
         List<Instructor> instructors = instructorDAO.findAllInstructorsByFavouriteCategory(learnerFavouriteCategory);
 
+        if (instructors == null) {
+            throw new RuntimeException("instructors not found");
+        }
+
         return InstructorMapper.toDTOList(instructors);
+    }
+
+    // retrieve instructors based on selected category
+    public List<InstructorDTO> findAllInstructorsWithSelectedCategory(String selectedCategory) {
+
+        List<Instructor> selectedCategoryInstructors = instructorDAO.findAllInstructorsByFavouriteCategory(selectedCategory);
+
+        if (selectedCategoryInstructors == null) {
+            throw new RuntimeException("selectedCategoryInstructors not found");
+        }
+        return InstructorMapper.toDTOList(selectedCategoryInstructors);
+
     }
 }

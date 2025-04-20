@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 public class Agreement {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "agreement_id")
     private Long agreementId;
 
@@ -19,7 +20,10 @@ public class Agreement {
     private Instructor instructor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", referencedColumnName = "post_id")
+    @JoinColumns({
+            @JoinColumn(name = "post_author_id", referencedColumnName = "author_id"),
+            @JoinColumn(name = "post_id", referencedColumnName = "post_id")
+    })
     private Post post;
 
 

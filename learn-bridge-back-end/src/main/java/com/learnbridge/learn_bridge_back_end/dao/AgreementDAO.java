@@ -1,14 +1,17 @@
 package com.learnbridge.learn_bridge_back_end.dao;
 
-import com.learnbridge.learn_bridge_back_end.entity.Agreement;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 
 import java.util.List;
 
 public interface AgreementDAO {
 
-    void saveAgreement(Agreement agreement);
-    void updateAgreement(Agreement agreement);
-    Agreement findAgreement(Long agreementId);
+    Agreement saveAgreement(Agreement agreement);
+    Agreement updateAgreement(Agreement agreement);
+    Agreement findAgreementById(Long agreementId);
     void deleteAgreement(Long agreementId);
     List<Agreement> findAllAgreements();
+    List<Agreement> findAgreementByLearnerId(Long learnerId);
+    List<Agreement> findAgreementByInstructorId(Long instructorId);
+    List<Agreement> findAgreementByPostId(PostId postId);
 }

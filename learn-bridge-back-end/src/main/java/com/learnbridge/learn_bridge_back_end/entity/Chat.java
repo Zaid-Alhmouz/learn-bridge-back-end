@@ -2,8 +2,7 @@ package com.learnbridge.learn_bridge_back_end.entity;
 
 
 import jakarta.persistence.*;
-
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "chat")
@@ -11,26 +10,23 @@ public class Chat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_id")
+    @Column(name = "chat_id", nullable = false, updatable = false)
     private Long chatId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "instructor_id", referencedColumnName = "user_id")
-    private User instructor;
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TextMessage> messages;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "agreement_id", referencedColumnName = "agreement_id")
-    private Agreement agreement;
-
-    @OneToMany(mappedBy = "chat")
-    private List<ParticipatedLearners> participants;
 
     public Long getChatId() {
         return chatId;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     public Session getSession() {
@@ -41,21 +37,20 @@ public class Chat {
         this.session = session;
     }
 
-    public User getInstructor() {
-        return instructor;
+    public Set<TextMessage> getMessages() {
+        return messages;
     }
 
-    public void setInstructor(User instructor) {
-        this.instructor = instructor;
+    public void setMessages(Set<TextMessage> messages) {
+        this.messages = messages;
     }
-
 
     @Override
     public String toString() {
         return "Chat{" +
                 "chatId=" + chatId +
                 ", session=" + session +
-                ", instructor=" + instructor +
+                ", messages=" + messages +
                 '}';
     }
 }

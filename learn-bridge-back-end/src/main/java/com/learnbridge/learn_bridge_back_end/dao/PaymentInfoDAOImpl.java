@@ -16,33 +16,33 @@ public class PaymentInfoDAOImpl implements PaymentInfoDAO {
 
     @Override
     @Transactional
-    public void savePaymentInfo(PaymentInfo paymentInfo) {
-
+    public PaymentInfo savePaymentInfo(PaymentInfo paymentInfo) {
         entityManager.persist(paymentInfo);
+        return paymentInfo;
     }
 
     @Override
     @Transactional
-    public void updatePaymentInfo(PaymentInfo paymentInfo) {
-
-        entityManager.merge(paymentInfo);
+    public PaymentInfo updatePaymentInfo(PaymentInfo paymentInfo) {
+        return entityManager.merge(paymentInfo);
     }
 
     @Override
-    public PaymentInfo findPaymentInfoById(Long paymentInfoId) {
-        return entityManager.find(PaymentInfo.class, paymentInfoId);
+    public PaymentInfo findPaymentInfoById(Long transactionId) {
+        return entityManager.find(PaymentInfo.class, transactionId);
+    }
+
+    @Override
+    @Transactional
+    public void deletePaymentInfo(Long transactionId) {
+        PaymentInfo paymentInfo = findPaymentInfoById(transactionId);
+        if (paymentInfo != null) {
+            entityManager.remove(paymentInfo);
+        }
     }
 
     @Override
     public List<PaymentInfo> findAllPaymentInfos() {
         return entityManager.createQuery("from PaymentInfo", PaymentInfo.class).getResultList();
-    }
-
-    @Override
-    @Transactional
-    public void deletePaymentInfoById(Long paymentInfoId) {
-
-        PaymentInfo paymentInfo = entityManager.find(PaymentInfo.class, paymentInfoId);
-        entityManager.remove(entityManager.contains(paymentInfo) ? paymentInfo : entityManager.merge(paymentInfo));
     }
 }

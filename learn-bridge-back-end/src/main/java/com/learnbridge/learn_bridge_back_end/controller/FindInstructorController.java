@@ -20,10 +20,24 @@ public class FindInstructorController {
     @Autowired
     private FindInstructorService findInstructorService;
 
+
+    // to retrieve instructors based on learner's favourite category
     @GetMapping("/find-favourite")
-    public ResponseEntity<List<InstructorDTO>> findFavourite(@AuthenticationPrincipal SecurityUser loggedUser) {
+    public ResponseEntity<List<InstructorDTO>> findFavouriteInstructors(@AuthenticationPrincipal SecurityUser loggedUser) {
         try {
             List<InstructorDTO> foundInstructors = findInstructorService.findAllInstructorsWithFavouriteLearnerCategory(loggedUser);
+            return new ResponseEntity<>(foundInstructors, HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // to retrieve instructors based on selected category
+    @GetMapping("/{selectedCategory}")
+    public ResponseEntity<List<InstructorDTO>> findSelectedCategoryInstructors(@PathVariable String selectedCategory) {
+        try {
+            List<InstructorDTO> foundInstructors = findInstructorService.findAllInstructorsWithSelectedCategory(selectedCategory);
             return new ResponseEntity<>(foundInstructors, HttpStatus.OK);
         }
         catch (Exception e) {

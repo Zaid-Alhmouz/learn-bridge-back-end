@@ -5,16 +5,11 @@ import com.learnbridge.learn_bridge_back_end.entity.SessionStatus;
 public class SessionDTO {
 
     private Long sessionId;
-    private Long transactionId;
-    private SessionStatus sessionStatus;
+    private Long instructorId;
+    private Long agreementId;
+    private String sessionStatus;
 
     public SessionDTO() {}
-
-    public SessionDTO(Long sessionId, Long transactionId, SessionStatus sessionStatus) {
-        this.sessionId = sessionId;
-        this.transactionId = transactionId;
-        this.sessionStatus = sessionStatus;
-    }
 
     public Long getSessionId() {
         return sessionId;
@@ -24,19 +19,37 @@ public class SessionDTO {
         this.sessionId = sessionId;
     }
 
-    public Long getTransactionId() {
-        return transactionId;
+    public Long getInstructorId() {
+        return instructorId;
     }
 
-    public void setTransactionId(Long transactionId) {
-        this.transactionId = transactionId;
+    public void setInstructorId(Long instructorId) {
+        this.instructorId = instructorId;
     }
 
-    public SessionStatus getSessionStatus() {
+    public Long getAgreementId() {
+        return agreementId;
+    }
+
+    public void setAgreementId(Long agreementId) {
+        this.agreementId = agreementId;
+    }
+
+    public String getSessionStatus() {
         return sessionStatus;
     }
 
-    public void setSessionStatus(SessionStatus sessionStatus) {
+    public void setSessionStatus(String sessionStatus) {
         this.sessionStatus = sessionStatus;
+    }
+
+    @Override
+    public String toString() {
+        return "SessionDTO{" +
+                "sessionId=" + sessionId +
+                ", instructorId=" + instructorId +
+                ", agreementId=" + agreementId +
+                ", sessionStatus='" + sessionStatus + '\'' +
+                '}';
     }
 }

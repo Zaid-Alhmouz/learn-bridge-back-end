@@ -1,7 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
@@ -10,27 +9,31 @@ public class TextMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_id")
+    @Column(name = "message_id", nullable = false, updatable = false)
     private Long messageId;
 
-    @OneToOne
-    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    @ManyToOne
-    @JoinColumn(name = "chat_id", referencedColumnName = "chat_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_id", nullable = false)
     private Chat chat;
 
     @Column(name = "sent_at")
     private LocalDate sentAt;
 
-    @Column(name = "content")
+    @Column(name = "content", length = 255)
     private String content;
+
 
     public Long getMessageId() {
         return messageId;
     }
 
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
+    }
 
     public User getSender() {
         return sender;
@@ -62,5 +65,16 @@ public class TextMessage {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    @Override
+    public String toString() {
+        return "TextMessage{" +
+                "messageId=" + messageId +
+                ", sender=" + sender +
+                ", chat=" + chat +
+                ", sentAt=" + sentAt +
+                ", content='" + content + '\'' +
+                '}';
     }
 }

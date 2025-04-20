@@ -23,8 +23,8 @@ public class Post {
 
     @MapsId("authorId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", referencedColumnName = "user_id", insertable = false, updatable = false)
-    private User author;
+    @JoinColumn(name = "author_id", referencedColumnName = "learner_id", insertable = false, updatable = false)
+    private Learner author;
 
     @Column(name = "approval_date", nullable = true)
     private LocalDateTime approvalDate;
@@ -62,11 +62,11 @@ public class Post {
         this.postId = postId;
     }
 
-    public User getAuthor() {
+    public Learner getAuthor() {
         return author;
     }
 
-    public void setAuthor(User user) {
+    public void setAuthor(Learner user) {
         this.author = user;
     }
 
@@ -122,7 +122,7 @@ public class Post {
     public String toString() {
         return "Post{" +
                 "post_id=" + postId +
-                ", authorId=" + author.getId() +
+                ", authorId=" + author.getUser().getId() +
                 ", approvalDate=" + approvalDate +
                 ", price=" + price +
                 ", subject='" + subject + '\'' +

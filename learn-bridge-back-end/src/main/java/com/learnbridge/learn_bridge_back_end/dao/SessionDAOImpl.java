@@ -1,8 +1,11 @@
 package com.learnbridge.learn_bridge_back_end.dao;
 
+import com.learnbridge.learn_bridge_back_end.entity.Agreement;
+import com.learnbridge.learn_bridge_back_end.entity.Instructor;
 import com.learnbridge.learn_bridge_back_end.entity.Session;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,16 +19,16 @@ public class SessionDAOImpl implements SessionDAO {
 
     @Override
     @Transactional
-    public void saveSession(Session session) {
+    public Session saveSession(Session session) {
 
         entityManager.persist(session);
+        return session;
     }
 
     @Override
     @Transactional
-    public void updateSession(Session session) {
-
-        entityManager.merge(session);
+    public Session updateSession(Session session) {
+       return entityManager.merge(session);
     }
 
     @Override
@@ -38,12 +41,32 @@ public class SessionDAOImpl implements SessionDAO {
     public void deleteSessionById(Long sessionId) {
 
         Session session = findSessionById(sessionId);
-        entityManager.remove(session);
+        if (session != null) {
+            entityManager.remove(session);
+        }
     }
 
     @Override
     public List<Session> findAllSessions() {
 
         return entityManager.createQuery("from Session", Session.class).getResultList();
+    }
+
+    @Override
+    public List<Session> findSessionByInstructorId(Long instructorId) {
+        TypedQuery<Session> query = entityManager.createQuery(
+                "SELECT s FROM Session s WHERE s.instructor.userId = :instructor_id",
+                Session.class);
+        query.setParameter("instructor_id", instructorId);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Session> findByAgreementId(Long agreementId) {
+        TypedQuery<Session> query = entityManager.createQuery(
+                "SELECT s FROM Session s WHERE s.agreement.agreementId = :agreement_id",
+                Session.class);
+        query.setParameter("agreement_id", agreementId);
+        return query.getResultList();
     }
 }

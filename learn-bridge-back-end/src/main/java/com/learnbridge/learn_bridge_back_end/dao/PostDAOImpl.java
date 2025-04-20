@@ -112,9 +112,10 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public List<Post> findAllPostsByFavouriteCategory(String category) {
-        String sql = "select p from Post p where p.category = :category";
+        String sql = "select p from Post p where p.category = :category AND p.postStatus = :PostStatus";
         TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("category", category);
+        query.setParameter("PostStatus", PostStatus.ACCEPTED);
         if(query.getResultList().isEmpty()){
             return null;
         }
