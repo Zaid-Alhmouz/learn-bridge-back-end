@@ -6,12 +6,13 @@ import java.util.List;
 
 public interface RatingDAO {
 
-    void saveRating(Rating rating);
-    void updateRating(Rating rating);
+    Rating saveRating(Rating rating);
+    Rating updateRating(Rating rating);
     void deleteRating(Long ratingId);
     List<Rating> findAllRatings();
     Rating findRatingBySessionAndLearnerId(Long sessionId, Long learnerId); // To be revised
     List<Rating> findRatingsByInstructorId(Long instructorId);
     void deleteRatingBySessionAndLearnerId(Long sessionId, Long learnerId);
+    Rating findRatingByRatingId(Long ratingId);
 
 }

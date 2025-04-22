@@ -31,7 +31,8 @@ public class File {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Column(name = "file_data")
+    @Lob
+    @Column(name = "file_data", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] fileData;
 
     @Column(name = "uploaded_at")

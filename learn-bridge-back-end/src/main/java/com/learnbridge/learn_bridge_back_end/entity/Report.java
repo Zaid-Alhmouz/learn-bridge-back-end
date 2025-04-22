@@ -13,6 +13,7 @@ public class Report {
     @Column(name = "report_id")
     private Long reportId;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "related_session_id", referencedColumnName = "session_id")
     private Session session;

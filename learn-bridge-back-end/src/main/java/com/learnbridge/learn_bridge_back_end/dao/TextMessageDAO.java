@@ -6,10 +6,11 @@ import java.util.List;
 
 public interface TextMessageDAO {
 
-    void saveTextMessage(TextMessage textMessage);
-    void updateTextMessage(TextMessage textMessage);
+    TextMessage saveTextMessage(TextMessage textMessage);
+    TextMessage updateTextMessage(TextMessage textMessage);
     void deleteTextMessageById(Long textMessageId);
     List<TextMessage> findTextMessageByChatId(Long ChatId);
     List<TextMessage> findAllTextMessages();
     void deleteAllTextMessagesByChatId(Long ChatId);
+    TextMessage findTextMessageById(Long textMessageId);
 }

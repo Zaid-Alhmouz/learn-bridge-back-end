@@ -17,16 +17,17 @@ public class RatingDAOImpl implements RatingDAO {
 
     @Override
     @Transactional
-    public void saveRating(Rating rating) {
+    public Rating saveRating(Rating rating) {
 
         entityManager.persist(rating);
+        return rating;
     }
 
     @Override
     @Transactional
-    public void updateRating(Rating rating) {
+    public Rating updateRating(Rating rating) {
 
-        entityManager.merge(rating);
+        return entityManager.merge(rating);
     }
 
     @Override
@@ -68,5 +69,10 @@ public class RatingDAOImpl implements RatingDAO {
     public void deleteRatingBySessionAndLearnerId(Long sessionId, Long learnerId) {
         Rating rating = findRatingBySessionAndLearnerId(sessionId, learnerId);
         entityManager.remove(entityManager.contains(rating) ? rating : entityManager.merge(rating));
+    }
+
+    @Override
+    public Rating findRatingByRatingId(Long ratingId) {
+        return entityManager.find(Rating.class, ratingId);
     }
 }

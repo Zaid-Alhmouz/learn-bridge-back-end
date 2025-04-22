@@ -5,11 +5,14 @@ import com.learnbridge.learn_bridge_back_end.dto.ReportDTO;
 import com.learnbridge.learn_bridge_back_end.dto.UserDTO;
 import com.learnbridge.learn_bridge_back_end.entity.Report;
 import com.learnbridge.learn_bridge_back_end.entity.ReportStatus;
+import com.learnbridge.learn_bridge_back_end.entity.ReportType;
+import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -73,6 +76,22 @@ public class ReportController {
         else {
             return new ResponseEntity<>(blockedUser, HttpStatus.OK);
         }
+    }
+
+    @PostMapping("/create-report/{relatedSessionId}/{reportedUserId}")
+    public ResponseEntity<ReportDTO> createReport(@RequestBody ReportDTO reportDTO, @AuthenticationPrincipal SecurityUser loggedUser, @PathVariable Long relatedSessionId, @PathVariable Long reportedUserId) {
+
+        Long reporterId = loggedUser.getUser().getId();
+        String description = reportDTO.getDescription();
+        ReportType reportType = reportDTO.getReportType();
+
+       ReportDTO createdReport = reportService.createReport(reporterId, reportedUserId, relatedSessionId, description, reportType);
+       if (createdReport == null) {
+           return ResponseEntity.notFound().build();
+       }
+       else {
+           return new ResponseEntity<>(createdReport, HttpStatus.CREATED);
+       }
     }
 
 }

@@ -1,20 +1,15 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
-import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
-import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
-import com.learnbridge.learn_bridge_back_end.dao.ReportDAO;
-import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
+import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.ReportDTO;
 import com.learnbridge.learn_bridge_back_end.dto.UserDTO;
-import com.learnbridge.learn_bridge_back_end.entity.AccountStatus;
-import com.learnbridge.learn_bridge_back_end.entity.Report;
-import com.learnbridge.learn_bridge_back_end.entity.ReportStatus;
-import com.learnbridge.learn_bridge_back_end.entity.User;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.ReportMapper;
 import com.learnbridge.learn_bridge_back_end.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -31,6 +26,9 @@ public class ReportService {
 
     @Autowired
     InstructorDAO instructorDAO;
+
+    @Autowired
+    SessionDAO sessionDAO;
 
     // get all pending reports for the admin
     public List<ReportDTO> getAllPendingReports()
@@ -83,5 +81,28 @@ public class ReportService {
         return UserMapper.toUserDTO(userToBeBlocked);
     }
 
+    public ReportDTO createReport(Long reporterId, Long reportedId, Long relatedSessionId, String description, ReportType reportType)
+    {
+        User reporter     = userDAO.findUserById(reporterId);
+        User reportedUser = userDAO.findUserById(reportedId);
+        Session session   = sessionDAO.findSessionById(relatedSessionId);
+
+        if (reporter == null || reportedUser == null || session == null) {
+            throw new RuntimeException("Invalid reporter, reportedUser or session ID.");
+        }
+
+        Report report = new Report();
+        report.setReporter(reporter);
+        report.setReportedUser(reportedUser);
+        report.setSession(session);
+        report.setDescription(description);
+        report.setReportType(reportType);
+        report.setReportStatus(ReportStatus.PENDING);
+        report.setCreationDate(LocalDateTime.now());
+
+        reportDAO.saveReport(report);
+
+        return ReportMapper.toReportDTO(report);
+    }
 
 }

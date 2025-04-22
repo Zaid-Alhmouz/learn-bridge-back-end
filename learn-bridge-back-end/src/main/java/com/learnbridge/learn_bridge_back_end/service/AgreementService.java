@@ -42,6 +42,15 @@ public class AgreementService {
         PostId compositePostId = new PostId(learnerId, postId);
         Post post = postDAO.findPostById(compositePostId);
 
+        if (!instructor.getFavouriteCategory().equalsIgnoreCase(post.getCategory())) {
+            throw new IllegalArgumentException(
+                    "Instructor's favourite category (“"
+                            + instructor.getFavouriteCategory()
+                            + "”) does not match post category (“"
+                            + post.getCategory()
+                            + "”)."
+            );
+        }
 
         // create and save a new agreement
         Agreement agreement = new Agreement();

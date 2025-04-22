@@ -34,6 +34,7 @@ public class SessionService {
     @Autowired
     private CardDAO cardDAO;
 
+
     @Transactional
     public SessionDTO createSessionFromAgreement(Long agreementId) {
         Agreement agreement = agreementDAO.findAgreementById(agreementId);
@@ -112,6 +113,48 @@ public class SessionService {
                 .collect(Collectors.toList());
     }
 
+    public List<SessionDTO> getSessionsByLearner(Long learnerId) {
+
+
+        List<Session> sessions = sessionDAO.findSessionsByParticipantId(learnerId);
+        return sessions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+
+    // get session history based on user role
+    public List<Session> getUserSessions(User user) {
+        if (user == null || user.getUserRole() == null) {
+            throw new IllegalArgumentException("User or UserRole is null");
+        }
+
+        switch (user.getUserRole()) {
+            case INSTRUCTOR:
+                return sessionDAO.findSessionByInstructorId(user.getId());
+            case LEARNER:
+                return sessionDAO.findSessionsByParticipantId(user.getId());
+            default:
+                throw new UnsupportedOperationException("Unsupported user role: " + user.getUserRole());
+        }
+    }
+
+    public List<Session> getActiveUserSessions(User user) {
+        if (user == null || user.getUserRole() == null) {
+            throw new IllegalArgumentException("User or UserRole is null");
+        }
+
+        switch (user.getUserRole()) {
+            case INSTRUCTOR:
+                return sessionDAO.findOngoingSessionByInstructorId(user.getId());
+            case LEARNER:
+                return sessionDAO.findOngoingSessionsByParticipantId(user.getId());
+            default:
+                throw new UnsupportedOperationException("Unsupported user role: " + user.getUserRole());
+        }
+    }
+
     public List<SessionDTO> getSessionsByAgreement(Long agreementId) {
         Agreement agreement = agreementDAO.findAgreementById(agreementId);
         if (agreement == null) {
@@ -137,12 +180,38 @@ public class SessionService {
         return convertToDTO(updatedSession);
     }
 
+    @Transactional
+    public SessionDTO cancelSession(Long sessionId, Long cancellerId) {
+
+        Session sessionToBeCancelled = sessionDAO.findSessionById(sessionId);
+
+        sessionToBeCancelled.setSessionStatus(SessionStatus.CANCELLED);
+        sessionToBeCancelled.setCancelledById(cancellerId);
+
+        sessionDAO.updateSession(sessionToBeCancelled);
+
+        return convertToDTO(sessionToBeCancelled);
+    }
+
+    @Transactional
+    public SessionDTO finishSession(Long sessionId, Long finisherId) {
+        Session sessionToBeFinished = sessionDAO.findSessionById(sessionId);
+        if (sessionToBeFinished == null) {
+            throw new RuntimeException("Session not found with id: " + sessionId);
+        }
+        sessionToBeFinished.setSessionStatus(SessionStatus.FINISHED);
+        sessionToBeFinished.setFinishedById(finisherId);
+        sessionDAO.updateSession(sessionToBeFinished);
+        return convertToDTO(sessionToBeFinished);
+    }
+
+
     private SessionDTO convertToDTO(Session session) {
         SessionDTO dto = new SessionDTO();
         dto.setSessionId(session.getSessionId());
         dto.setInstructorId(session.getInstructor().getId());
         dto.setAgreementId(session.getAgreement().getAgreementId());
-        dto.setSessionStatus(session.getSessionStatus().toString());
+        dto.setSessionStatus(session.getSessionStatus());
         return dto;
     }
 }

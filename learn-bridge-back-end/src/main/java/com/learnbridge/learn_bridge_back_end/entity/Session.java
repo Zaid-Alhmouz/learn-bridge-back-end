@@ -1,6 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.entity;
 
-import com.learnbridge.learn_bridge_back_end.entity.*;
+import com.learnbridge.learn_bridge_back_end.converter.CaseInsensitiveEnumConverter;
 import jakarta.persistence.*;
 import java.util.Set;
 
@@ -21,11 +21,12 @@ public class Session {
     @JoinColumn(name = "instructor_id", nullable = false)
     private User instructor;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agreement_id", nullable = false)
     private Agreement agreement;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CaseInsensitiveEnumConverter.class)
     @Column(name = "session_status")
     private SessionStatus sessionStatus;
 
@@ -34,6 +35,12 @@ public class Session {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SessionParticipants> participants;
+
+    @Column(name = "cancelled_by_id")
+    private Long cancelledById;
+
+    @Column(name = "finished_by_id")
+    private Long finishedById;
 
     public Long getSessionId() {
         return sessionId;
@@ -89,6 +96,23 @@ public class Session {
 
     public void setParticipants(Set<SessionParticipants> participants) {
         this.participants = participants;
+    }
+
+
+    public Long getCancelledById() {
+        return cancelledById;
+    }
+
+    public void setCancelledById(Long cancelledById) {
+        this.cancelledById = cancelledById;
+    }
+
+    public Long getFinishedById() {
+        return finishedById;
+    }
+
+    public void setFinishedById(Long finishedById) {
+        this.finishedById = finishedById;
     }
 
     @Override

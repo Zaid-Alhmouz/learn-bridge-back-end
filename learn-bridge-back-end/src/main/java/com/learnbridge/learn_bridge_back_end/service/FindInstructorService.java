@@ -1,18 +1,22 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
 
-import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
-import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
-import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
+import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.InstructorDTO;
+import com.learnbridge.learn_bridge_back_end.dto.ReviewDTO;
 import com.learnbridge.learn_bridge_back_end.entity.Instructor;
 import com.learnbridge.learn_bridge_back_end.entity.Learner;
+import com.learnbridge.learn_bridge_back_end.entity.Rating;
+import com.learnbridge.learn_bridge_back_end.entity.Session;
+import com.learnbridge.learn_bridge_back_end.repository.InstructorStatsRepository;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.util.InstructorMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static com.learnbridge.learn_bridge_back_end.util.InstructorMapper.toDTOList;
 
 @Service
 public class FindInstructorService {
@@ -26,37 +30,36 @@ public class FindInstructorService {
     @Autowired
     private LearnerDAO learnerDAO;
 
+    @Autowired
+    private SessionDAO sessionDAO;
 
-    // default instructors based on user's favourite category
-    public List<InstructorDTO> findAllInstructorsWithFavouriteLearnerCategory(SecurityUser loggedUser) {
+    @Autowired
+    private RatingDAO ratingDAO;
 
-        Long userId = loggedUser.getUser().getId();
-        Learner learner = learnerDAO.findLearnerById(userId);
+    @Autowired
+    private InstructorStatsRepository repo;
 
-        if (learner == null) {
-            throw new RuntimeException("learner not found");
-        }
 
-        String learnerFavouriteCategory = learner.getFavouriteCategory();
 
-        List<Instructor> instructors = instructorDAO.findAllInstructorsByFavouriteCategory(learnerFavouriteCategory);
-
-        if (instructors == null) {
-            throw new RuntimeException("instructors not found");
-        }
-
-        return InstructorMapper.toDTOList(instructors);
+    // retrieve instructors for learners based on their favourite category
+    public List<InstructorDTO> findFavouriteInstructors(SecurityUser user) {
+        // get learner’s category…
+        String category = learnerDAO.findLearnerById(user.getUser().getId())
+                .getFavouriteCategory();
+        return repo.findStatsByCategory(category);
     }
 
-    // retrieve instructors based on selected category
-    public List<InstructorDTO> findAllInstructorsWithSelectedCategory(String selectedCategory) {
-
-        List<Instructor> selectedCategoryInstructors = instructorDAO.findAllInstructorsByFavouriteCategory(selectedCategory);
-
-        if (selectedCategoryInstructors == null) {
-            throw new RuntimeException("selectedCategoryInstructors not found");
-        }
-        return InstructorMapper.toDTOList(selectedCategoryInstructors);
-
+    // retrieve instructors for learners based on the selected category
+    public List<InstructorDTO> findSelectedCategoryInstructors(String selectedCategory) {
+        return repo.findStatsByCategory(selectedCategory);
     }
+
+    // retrieve the selected instructor profile information
+    public InstructorDTO viewProfile(Long instructorId) {
+        return repo.findStatsById(instructorId)
+                .orElseThrow(() -> new RuntimeException("Instructor not found: " + instructorId));
+    }
+
+
+
 }

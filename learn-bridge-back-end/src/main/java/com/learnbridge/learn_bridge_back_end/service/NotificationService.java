@@ -64,6 +64,19 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+
+    @Transactional
+    public Notifications createAgreementRejectedNotification(Agreement agreement) {
+        Notifications notification = new Notifications();
+        // send *to* the instructor
+        notification.setUser(agreement.getInstructor().getUser());
+        notification.setAgreement(agreement);
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setNotificationType("AGREEMENT_REJECTED");
+        notification.setTimestamp(LocalDateTime.now());
+        return notificationsDAO.saveNotification(notification);
+    }
+
     private NotificationDTO convertToDTO(Notifications notification) {
         NotificationDTO dto = new NotificationDTO();
         dto.setNotificationId(notification.getNotificationId());
@@ -75,16 +88,29 @@ public class NotificationService {
 
         // Include additional info based on notification type
         if (notification.getAgreement() != null) {
-            Agreement agreement = notification.getAgreement();
-
-            if ("AGREEMENT_REQUEST".equals(notification.getNotificationType())) {
-                Instructor instructor = agreement.getInstructor();
-                dto.setMessage("Instructor " + instructor.getFirstName() + " " + instructor.getLastName() +
-                        " requested an agreement for your post: " + agreement.getPost().getSubject());
-            } else if ("AGREEMENT_ACCEPTED".equals(notification.getNotificationType())) {
-                Learner learner = agreement.getLearner();
-                dto.setMessage("Learner " + learner.getFirstName() + " " + learner.getLastName() +
-                        " accepted your agreement request for post: " + agreement.getPost().getSubject());
+            Agreement agr = notification.getAgreement();
+            switch (notification.getNotificationType()) {
+                case "AGREEMENT_REQUEST":
+                    Instructor instr = agr.getInstructor();
+                    dto.setMessage("Instructor "
+                            + instr.getFirstName() + " " + instr.getLastName()
+                            + " requested an agreement for your post: "
+                            + agr.getPost().getSubject());
+                    break;
+                case "AGREEMENT_ACCEPTED":
+                    Learner learner = agr.getLearner();
+                    dto.setMessage("Learner "
+                            + learner.getFirstName() + " " + learner.getLastName()
+                            + " accepted your agreement request for post: "
+                            + agr.getPost().getSubject());
+                    break;
+                case "AGREEMENT_REJECTED":
+                    Learner l = agr.getLearner();
+                    dto.setMessage("Learner "
+                            + l.getFirstName() + " " + l.getLastName()
+                            + " rejected your agreement request for post: "
+                            + agr.getPost().getSubject());
+                    break;
             }
         }
 

@@ -14,6 +14,11 @@ public interface SessionDAO {
     void deleteSessionById(Long sessionId);
     List<Session> findAllSessions();
     List<Session> findSessionByInstructorId(Long sessionId);
+    List<Session> findOngoingSessionByInstructorId(Long sessionId);
     List<Session> findByAgreementId(Long AgreementId);
+    List<Session> findSessionsByParticipantId(Long participantId);
+    List<Session> findOngoingSessionsByParticipantId(Long participantId);
+    List<Session> findFinishedSessionByInstructorId(Long sessionId);
+
 
 }

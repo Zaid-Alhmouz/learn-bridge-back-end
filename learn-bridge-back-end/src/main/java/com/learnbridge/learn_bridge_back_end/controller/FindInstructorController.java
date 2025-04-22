@@ -25,7 +25,7 @@ public class FindInstructorController {
     @GetMapping("/find-favourite")
     public ResponseEntity<List<InstructorDTO>> findFavouriteInstructors(@AuthenticationPrincipal SecurityUser loggedUser) {
         try {
-            List<InstructorDTO> foundInstructors = findInstructorService.findAllInstructorsWithFavouriteLearnerCategory(loggedUser);
+            List<InstructorDTO> foundInstructors = findInstructorService.findFavouriteInstructors(loggedUser);
             return new ResponseEntity<>(foundInstructors, HttpStatus.OK);
         }
         catch (Exception e) {
@@ -37,11 +37,21 @@ public class FindInstructorController {
     @GetMapping("/{selectedCategory}")
     public ResponseEntity<List<InstructorDTO>> findSelectedCategoryInstructors(@PathVariable String selectedCategory) {
         try {
-            List<InstructorDTO> foundInstructors = findInstructorService.findAllInstructorsWithSelectedCategory(selectedCategory);
+            List<InstructorDTO> foundInstructors = findInstructorService.findSelectedCategoryInstructors(selectedCategory);
             return new ResponseEntity<>(foundInstructors, HttpStatus.OK);
         }
         catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/view-profile/{instructorId}")
+    public ResponseEntity<InstructorDTO> viewProfile(@PathVariable Long instructorId) {
+        try {
+            InstructorDTO dto = findInstructorService.viewProfile(instructorId);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

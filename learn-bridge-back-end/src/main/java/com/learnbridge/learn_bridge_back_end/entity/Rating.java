@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,15 +33,15 @@ public class Rating {
     private Integer stars;
 
     @Column(name = "review_date")
-    private LocalDateTime reviewDate;
+    private LocalDate reviewDate;
 
 
     @PrePersist
     protected void onCreate() {
-        reviewDate = LocalDateTime.now();
+        reviewDate = LocalDate.now();
     }
 
-    public Long getRating_id() {
+    public Long getRatingId() {
         return ratingId;
     }
 
@@ -84,11 +85,11 @@ public class Rating {
         this.stars = stars;
     }
 
-    public LocalDateTime getReviewDate() {
+    public LocalDate getReviewDate() {
         return reviewDate;
     }
 
-    public void setReviewDate(LocalDateTime reviewDate) {
+    public void setReviewDate(LocalDate reviewDate) {
         this.reviewDate = reviewDate;
     }
 }

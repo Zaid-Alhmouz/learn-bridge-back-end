@@ -45,6 +45,8 @@ public class SessionParticipantsDAOImpl implements SessionParticipantsDAO {
         return entityManager.find(SessionParticipants.class, id);
     }
 
+
+
     @Override
     public List<SessionParticipants> findParticipantsBySession(Session session) {
         TypedQuery<SessionParticipants> query = entityManager.createQuery(

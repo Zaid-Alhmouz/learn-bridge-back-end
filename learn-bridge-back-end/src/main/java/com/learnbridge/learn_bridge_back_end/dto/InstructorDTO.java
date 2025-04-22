@@ -1,6 +1,8 @@
 package com.learnbridge.learn_bridge_back_end.dto;
 
+import com.learnbridge.learn_bridge_back_end.dao.SessionDAO;
 import com.learnbridge.learn_bridge_back_end.entity.Instructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 
@@ -13,6 +15,12 @@ public class InstructorDTO {
     private String bio;
     private BigDecimal avgPrice;
     private String favouriteCategory;
+    private Integer numberOfSessions;
+    private Integer numberOfReviews;
+    private Double ratingAvg;
+
+
+
 
     public InstructorDTO() {
     }
@@ -25,6 +33,30 @@ public class InstructorDTO {
         this.bio = instructor.getInstructorBio();
         this.avgPrice = instructor.getAvgPrice();
         this.favouriteCategory = instructor.getFavouriteCategory();
+    }
+
+    public InstructorDTO(
+            Long instructorId,
+            String firstName,
+            String lastName,
+            String universityInfo,
+            String bio,
+            BigDecimal avgPrice,
+            String favouriteCategory,
+            long numberOfSessions,
+            long numberOfReviews,
+            double ratingAvg
+    ) {
+        this.instructorId = instructorId;
+        this.firstName      = firstName;
+        this.lastName       = lastName;
+        this.universityInfo = universityInfo;
+        this.bio            = bio;
+        this.avgPrice       = avgPrice;
+        this.favouriteCategory = favouriteCategory;
+        this.numberOfSessions  = (int) numberOfSessions;
+        this.numberOfReviews   = (int) numberOfReviews;
+        this.ratingAvg         = ratingAvg;
     }
 
     public Long getInstructorId() {
@@ -83,6 +115,30 @@ public class InstructorDTO {
         this.avgPrice = avgPrice;
     }
 
+    public Integer getNumberOfSessions() {
+        return numberOfSessions;
+    }
+
+    public void setNumberOfSessions(Integer numberOfSessions) {
+        this.numberOfSessions = numberOfSessions;
+    }
+
+    public Integer getNumberOfReviews() {
+        return numberOfReviews;
+    }
+
+    public void setNumberOfReviews(Integer numberOfReviews) {
+        this.numberOfReviews = numberOfReviews;
+    }
+
+    public Double getRatingAvg() {
+        return ratingAvg;
+    }
+
+    public void setRatingAvg(Double ratingAvg) {
+        this.ratingAvg = ratingAvg;
+    }
+
     @Override
     public String toString() {
         return "InstructorDTO{" +
@@ -93,6 +149,9 @@ public class InstructorDTO {
                 ", bio='" + bio + '\'' +
                 ", avgPrice=" + avgPrice +
                 ", favouriteCategory='" + favouriteCategory + '\'' +
+                ", numberOfSessions=" + numberOfSessions +
+                ", numberOfReviews=" + numberOfReviews +
+                ", ratingAvg=" + ratingAvg +
                 '}';
     }
 }

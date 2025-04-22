@@ -47,24 +47,15 @@ public class AgreementController {
     }
 
 
-    @GetMapping("/notifications/unread")
-    public ResponseEntity<List<NotificationDTO>> getUnreadNotifications(@AuthenticationPrincipal SecurityUser securityUser) {
-        User user = securityUser.getUser();
-        List<NotificationDTO> notifications = notificationsService.getUnreadUserNotifications(user);
-        return ResponseEntity.ok(notifications);
-    }
-
-
-    @PutMapping("/notifications/{notificationId}/read")
-    public ResponseEntity<?> markNotificationAsRead(@PathVariable Long notificationId) {
-        notificationsService.markNotificationAsRead(notificationId);
-        return ResponseEntity.ok().build();
-    }
-
-
     @PostMapping("/notifications/{notificationId}/accept")
     public ResponseEntity<SessionDTO> acceptAgreementOffer(@PathVariable Long notificationId) {
         SessionDTO session = agreementWorkflowService.acceptAgreementOffer(notificationId);
         return ResponseEntity.ok(session);
+    }
+
+    @PostMapping("/notifications/{notificationId}/reject")
+    public ResponseEntity<Void> rejectAgreementOffer(@PathVariable Long notificationId) {
+        agreementWorkflowService.rejectAgreementOffer(notificationId);
+        return ResponseEntity.ok().build();
     }
 }

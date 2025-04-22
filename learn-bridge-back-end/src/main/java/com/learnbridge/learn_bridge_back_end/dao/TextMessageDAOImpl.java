@@ -17,21 +17,22 @@ public class TextMessageDAOImpl implements TextMessageDAO {
 
     @Override
     @Transactional
-    public void saveTextMessage(TextMessage textMessage) {
+    public TextMessage saveTextMessage(TextMessage textMessage) {
 
         entityManager.persist(textMessage);
+
+        return textMessage;
     }
 
     @Override
     @Transactional
-    public void updateTextMessage(TextMessage textMessage) {
-        entityManager.merge(textMessage);
+    public TextMessage updateTextMessage(TextMessage textMessage) {
+        return entityManager.merge(textMessage);
     }
 
     @Override
     @Transactional
     public void deleteTextMessageById(Long textMessageId) {
-
         TextMessage textMessage = entityManager.find(TextMessage.class, textMessageId);
         entityManager.remove(entityManager.contains(textMessage) ? textMessage : entityManager.merge(textMessage));
     }
@@ -57,5 +58,11 @@ public class TextMessageDAOImpl implements TextMessageDAO {
         for (TextMessage textMessage : textMessages) {
             entityManager.remove(entityManager.contains(textMessage) ? textMessage : entityManager.merge(textMessage));
         }
+    }
+
+    @Override
+    public TextMessage findTextMessageById(Long textMessageId) {
+
+        return entityManager.find(TextMessage.class, textMessageId);
     }
 }
