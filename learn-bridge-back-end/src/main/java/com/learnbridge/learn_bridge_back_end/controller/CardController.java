@@ -27,4 +27,16 @@ public class CardController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/set-default/{cardId}")
+    public ResponseEntity<?> setDefaultCard(@PathVariable Long cardId, @AuthenticationPrincipal SecurityUser loggedUser) {
+        Long userId = loggedUser.getUser().getId();
+
+        AddCardRequest editedCard = cardService.setDefaultCard(cardId, userId);
+
+        if (editedCard == null) {
+           return ResponseEntity.badRequest().body(editedCard);
+        }
+        return ResponseEntity.ok(editedCard);
+    }
 }

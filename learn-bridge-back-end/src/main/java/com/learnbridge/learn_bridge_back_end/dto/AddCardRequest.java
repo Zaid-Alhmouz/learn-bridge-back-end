@@ -15,19 +15,20 @@ public class AddCardRequest {
     @JsonDeserialize(using = CustomYearMonthDeserializer.class)
     @JsonSerialize(using = CustomYearMonthSerializer.class)
     private YearMonth expireDate;
+    private boolean isExpired;
+    private boolean isDefault;
 
 
 
-    public AddCardRequest()
-    {
 
-    }
+    public AddCardRequest() {}
 
     public AddCardRequest(Card card)
     {
         this.cardNumber = card.getCardNumber();
         this.expireDate = card.getExpireDate();
         this.holderName = card.getHolderName();
+        this.isDefault = card.isDefaultCard();
     }
 
     // Getters and setters
@@ -50,4 +51,30 @@ public class AddCardRequest {
         this.holderName = holderName;
     }
 
+    public boolean isExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(boolean expired) {
+        isExpired = expired;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setDefault(boolean aDefault) {
+        isDefault = aDefault;
+    }
+
+    @Override
+    public String toString() {
+        return "AddCardRequest{" +
+                "cardNumber='" + cardNumber + '\'' +
+                ", holderName='" + holderName + '\'' +
+                ", expireDate=" + expireDate +
+                ", isExpired=" + isExpired +
+                ", isDefault=" + isDefault +
+                '}';
+    }
 }

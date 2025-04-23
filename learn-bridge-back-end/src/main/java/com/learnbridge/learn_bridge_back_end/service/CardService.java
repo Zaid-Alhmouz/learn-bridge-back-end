@@ -7,6 +7,7 @@ import com.learnbridge.learn_bridge_back_end.entity.Card;
 import com.learnbridge.learn_bridge_back_end.entity.CardType;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
+import com.learnbridge.learn_bridge_back_end.util.CardMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +76,26 @@ public class CardService {
 
         cardDAO.saveCard(card);
         return card;
+    }
+
+    public AddCardRequest setDefaultCard(Long cardId, Long userId) {
+
+        Card card = cardDAO.findCardById(cardId);
+        if (card == null) {
+            throw new RuntimeException("Card not found with id: " + cardId);
+        }
+        if(card.getUser().getId() != userId){
+            throw new RuntimeException("User is not the owner of the card");
+        }
+
+        Card previousDefaultCard = cardDAO.findDefaultCard();
+        if (previousDefaultCard != null) {
+            card.setDefaultCard(false);
+            cardDAO.updateCard(previousDefaultCard);
+        }
+        card.setDefaultCard(true);
+        Card editedCard = cardDAO.updateCard(card);
+
+        return CardMapper.toAddCardRequest(editedCard);
     }
 }

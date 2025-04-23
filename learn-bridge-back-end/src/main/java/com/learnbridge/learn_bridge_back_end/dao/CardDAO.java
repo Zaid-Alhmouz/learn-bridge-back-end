@@ -6,12 +6,13 @@ import java.util.List;
 
 public interface CardDAO {
 
-    void saveCard(Card card);
-    void updateCard(Card card);
+    Card saveCard(Card card);
+    Card updateCard(Card card);
     void deleteCard(Long cardId);
     List<Card> getAllCards();
     Card findCardById(Long cardId);
     Card findCardByUserId(Long userId);
     List<Card> findAllCardsByUserId(Long userId);
     Card findCardByCardNumber(String cardNumber);
+    public Card findDefaultCard();
 }

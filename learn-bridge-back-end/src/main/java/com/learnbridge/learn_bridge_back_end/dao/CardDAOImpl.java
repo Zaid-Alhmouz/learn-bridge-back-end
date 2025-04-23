@@ -17,14 +17,15 @@ public class CardDAOImpl implements CardDAO {
 
     @Override
     @Transactional
-    public void saveCard(Card card) {
+    public Card saveCard(Card card) {
         entityManager.persist(card);
+        return card;
     }
 
     @Override
     @Transactional
-    public void updateCard(Card card) {
-        entityManager.merge(card);
+    public Card updateCard(Card card) {
+        return entityManager.merge(card);
     }
 
     @Override
@@ -73,6 +74,15 @@ public class CardDAOImpl implements CardDAO {
         String sqlStatement = "from Card c where c.cardNumber = :cardNumber";
         TypedQuery<Card> query = entityManager.createQuery(sqlStatement, Card.class);
         query.setParameter("cardNumber", cardNumber);
+        Card card = query.getSingleResult();
+        return card;
+    }
+
+    @Override
+    public Card findDefaultCard() {
+        String sql = "from Card c where c.defaultCard = :isDefault";
+        TypedQuery<Card> query = entityManager.createQuery(sql, Card.class);
+        query.setParameter("isDefault", true);
         Card card = query.getSingleResult();
         return card;
     }
