@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,10 +31,17 @@ public class ReportService {
     @Autowired
     SessionDAO sessionDAO;
 
+    @Autowired
+    SessionParticipantsDAO sessionParticipantsDAO;
+
     // get all pending reports for the admin
     public List<ReportDTO> getAllPendingReports()
     {
         List<Report> pendingReports = reportDAO.findPendingReports();
+        if (pendingReports == null || pendingReports.isEmpty())
+        {
+            return new ArrayList<>();
+        }
         return ReportMapper.toReportDTOList(pendingReports);
     }
 
@@ -86,9 +94,23 @@ public class ReportService {
         User reporter     = userDAO.findUserById(reporterId);
         User reportedUser = userDAO.findUserById(reportedId);
         Session session   = sessionDAO.findSessionById(relatedSessionId);
+        List<SessionParticipants> participants = sessionParticipantsDAO.findParticipantsBySession(session);
+
+        boolean found = false;
 
         if (reporter == null || reportedUser == null || session == null) {
             throw new RuntimeException("Invalid reporter, reportedUser or session ID.");
+        }
+
+        for (SessionParticipants participant: participants) {
+            if (participant.getSession().equals(session)) {
+                found = true;
+            }
+        }
+
+        if (!found)
+        {
+            throw new RuntimeException("Learner with id " + reportedId + " not found in session." + session.getSessionId());
         }
 
         Report report = new Report();

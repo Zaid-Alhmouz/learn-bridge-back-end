@@ -27,7 +27,10 @@ public class PostDAOImpl implements PostDAO {
     @Override
     @Transactional
     public void updatePost(Post post) {
-        entityManager.merge(post);
+        Post postToUpdate = entityManager.find(Post.class, post.getPostId());
+        if (postToUpdate != null) {
+            entityManager.merge(post);
+        }
     }
 
     @Override
@@ -59,7 +62,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public List<Post> findApprovedPostsByUserId(Long userId) {
-        String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.userId = :UserId";
+        String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.learnerId = :UserId";
         Query query = entityManager.createQuery(sql);
         query.setParameter("PostStatus", PostStatus.ACCEPTED);
         query.setParameter("UserId", userId);
@@ -68,7 +71,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public List<Post> findPendingPostsByUserId(Long userId) {
-        String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.userId = :UserId";
+        String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.learnerId = :UserId";
         Query query = entityManager.createQuery(sql);
         query.setParameter("PostStatus", PostStatus.PENDING);
         query.setParameter("UserId", userId);
@@ -77,7 +80,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public List<Post> findAllPostsByUserId(Long userId) {
-        String sql = "select p from Post p where p.author.userId = :UserId";
+        String sql = "select p from Post p where p.author.learnerId = :UserId";
         Query query = entityManager.createQuery(sql);
         query.setParameter("UserId", userId);
         return query.getResultList();

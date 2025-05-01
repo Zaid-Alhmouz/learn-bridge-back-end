@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +18,8 @@ public class NotificationService {
     @Autowired
     private NotificationsDAO notificationsDAO;
 
+
+    // Instructor asking for agreement notification
     @Transactional
     public Notifications createAgreementRequestNotification(Agreement agreement) {
         Notifications notification = new Notifications();
@@ -28,6 +31,24 @@ public class NotificationService {
 
         return notificationsDAO.saveNotification(notification);
     }
+
+
+    // Learner asking for agreement notification
+    @Transactional
+    public Notifications createLearnerRequestNotification(Agreement agreement) {
+        Notifications notification = new Notifications();
+
+        // send *to* the instructor
+        notification.setUser(agreement.getInstructor().getUser());
+        notification.setAgreement(agreement);
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setNotificationType("LEARNER_REQUEST");
+        notification.setTimestamp(LocalDateTime.now());
+
+        return notificationsDAO.saveNotification(notification);
+    }
+
+
 
     @Transactional
     public Notifications createAgreementAcceptedNotification(Agreement agreement) {
@@ -77,6 +98,32 @@ public class NotificationService {
         return notificationsDAO.saveNotification(notification);
     }
 
+    @Transactional
+    public Notifications createLearnerRequestAcceptedNotification(Agreement ag) {
+        Notifications n = new Notifications();
+        // send *to* the learner
+        n.setUser(ag.getLearner().getUser());
+        n.setAgreement(ag);
+        n.setNotificationType("LEARNER_REQUEST_ACCEPTED");
+        n.setReadStatus(ReadStatus.UNREAD);
+        n.setTimestamp(LocalDateTime.now());
+        return notificationsDAO.saveNotification(n);
+    }
+
+    @Transactional
+    public Notifications createLearnerRequestRejectedNotification(Agreement ag) {
+        Notifications n = new Notifications();
+        n.setUser(ag.getLearner().getUser());
+        n.setAgreement(ag);
+        n.setNotificationType("LEARNER_REQUEST_REJECTED");
+        n.setReadStatus(ReadStatus.UNREAD);
+        n.setTimestamp(LocalDateTime.now());
+        return notificationsDAO.saveNotification(n);
+    }
+
+
+
+
     private NotificationDTO convertToDTO(Notifications notification) {
         NotificationDTO dto = new NotificationDTO();
         dto.setNotificationId(notification.getNotificationId());
@@ -111,10 +158,58 @@ public class NotificationService {
                             + " rejected your agreement request for post: "
                             + agr.getPost().getSubject());
                     break;
+                case "LEARNER_REQUEST":
+                    Learner l2 = agr.getLearner();
+                    dto.setMessage("Learner "
+                            + l2.getFirstName() + " " + l2.getLastName()
+                            + " requested your agreement at price "
+                            + agr.getPrice()); // or agr.getPost().getPrice() if you kept a post
+                    break;
+                case "LEARNER_REQUEST_ACCEPTED":
+                    dto.setMessage("Instructor "
+                            + agr.getInstructor().getFirstName() + " accepted your request.");
+                    break;
+
+                case "LEARNER_REQUEST_REJECTED":
+                    dto.setMessage("Instructor "
+                            + agr.getInstructor().getFirstName() + " declined your request.");
+                    break;
             }
         }
 
         return dto;
+    }
+
+
+
+    public void sendHoldNotification(User learner,
+                                     BigDecimal amount,
+                                     String paymentIntentId) {
+        Notifications notification = new Notifications();
+        notification.setUser(learner);
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setNotificationType("PAYMENT_HELD");
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setMessage(String.format(
+                "We’ve placed a hold of $%s on your card (PaymentIntent %s).",
+                amount, paymentIntentId
+        ));
+        notificationsDAO.saveNotification(notification);
+    }
+
+    public void sendTransferNotification(User instructor,
+                                         BigDecimal amount,
+                                         String chargeId) {
+        Notifications n = new Notifications();
+        n.setUser(instructor);
+        n.setReadStatus(ReadStatus.UNREAD);
+        n.setNotificationType("FUNDS_TRANSFERRED");
+        n.setTimestamp(LocalDateTime.now());
+        n.setMessage(String.format(
+                "You’ve received $%s for your session (Charge %s).",
+                amount, chargeId
+        ));
+        notificationsDAO.saveNotification(n);
     }
 
     public Notifications findNotificationById(Long notificationId) {

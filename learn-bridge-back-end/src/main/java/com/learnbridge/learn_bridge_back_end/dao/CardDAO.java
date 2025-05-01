@@ -15,4 +15,5 @@ public interface CardDAO {
     List<Card> findAllCardsByUserId(Long userId);
     Card findCardByCardNumber(String cardNumber);
     public Card findDefaultCard();
+    public Card findDefaultCardByUserId(Long userId);
 }

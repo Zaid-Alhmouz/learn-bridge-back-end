@@ -31,6 +31,9 @@ public class Notifications {
     @Column(name = "time_stamp")
     private LocalDateTime timestamp;
 
+    @Column(name = "message")
+    private String message;
+
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
@@ -82,14 +85,24 @@ public class Notifications {
         this.agreement = agreement;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     @Override
     public String toString() {
         return "Notifications{" +
                 "notificationId=" + notificationId +
                 ", user=" + user +
+                ", agreement=" + agreement +
                 ", readStatus=" + readStatus +
                 ", notificationType='" + notificationType + '\'' +
                 ", timestamp=" + timestamp +
+                ", message='" + message + '\'' +
                 '}';
     }
 }

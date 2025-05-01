@@ -2,6 +2,8 @@ package com.learnbridge.learn_bridge_back_end.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "agreement")
 public class Agreement {
@@ -19,13 +21,15 @@ public class Agreement {
     @JoinColumn(name = "instructor_id", referencedColumnName = "instructor_id")
     private Instructor instructor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumns({
-            @JoinColumn(name = "post_author_id", referencedColumnName = "author_id"),
-            @JoinColumn(name = "post_id", referencedColumnName = "post_id")
+            @JoinColumn(name="post_author_id", referencedColumnName="author_id", nullable=true),
+            @JoinColumn(name="post_id", referencedColumnName="post_id", nullable=true)
     })
     private Post post;
 
+    @Column(name="price", precision=6, scale=2)
+    private BigDecimal price;
 
 
     public Long getAgreementId() {
@@ -55,6 +59,18 @@ public class Agreement {
 
     public void setPost(Post post) {
         this.post = post;
+    }
+
+    public void setAgreementId(Long agreementId) {
+        this.agreementId = agreementId;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     @Override

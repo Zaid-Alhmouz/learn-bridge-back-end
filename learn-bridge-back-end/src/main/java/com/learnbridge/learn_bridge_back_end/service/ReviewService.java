@@ -2,15 +2,13 @@ package com.learnbridge.learn_bridge_back_end.service;
 
 import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.ReviewDTO;
-import com.learnbridge.learn_bridge_back_end.entity.Instructor;
-import com.learnbridge.learn_bridge_back_end.entity.Learner;
-import com.learnbridge.learn_bridge_back_end.entity.Rating;
-import com.learnbridge.learn_bridge_back_end.entity.Session;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.ReviewMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,6 +29,9 @@ public class ReviewService {
     @Autowired
     private LearnerDAO learnerDAO;
 
+    @Autowired
+    private SessionParticipantsDAO sessionParticipantsDAO;
+
 
     // add review service
     public ReviewDTO addReview(ReviewDTO reviewDTO) {
@@ -40,9 +41,26 @@ public class ReviewService {
         Session session = sessionDAO.findSessionById(reviewDTO.getSessionId());
         Instructor instructor = instructorDAO.findInstructorById(reviewDTO.getInstructorId());
         Learner learner = learnerDAO.findLearnerById(reviewDTO.getLearnerId());
+        List<SessionParticipants> participants = sessionParticipantsDAO.findParticipantsBySession(session);
+
+        boolean found = false;
 
         if (learner == null || session == null || instructor==null) {
             throw new RuntimeException("Learner or session or learner not found");
+        }
+
+        if (!(session.getInstructor().getId().equals(instructor.getInstructorId())))
+        {
+            throw new RuntimeException("Instructor does not belong to session");
+        }
+
+        for(SessionParticipants participant: participants) {
+            if (participant.getSession().equals(session)) {
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new RuntimeException("Learner does not belong to session");
         }
 
         ratingToBeAdded.setSession(session);
@@ -74,7 +92,7 @@ public class ReviewService {
         List<Rating> instructorRatings = ratingDAO.findRatingsByInstructorId(instructorId);
 
         if (instructorRatings == null) {
-            throw new RuntimeException("Reviews not found");
+            return new ArrayList<>();
         }
 
         return ReviewMapper.toDTOList(instructorRatings);

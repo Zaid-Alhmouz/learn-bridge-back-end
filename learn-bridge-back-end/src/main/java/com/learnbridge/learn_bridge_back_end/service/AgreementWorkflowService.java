@@ -1,14 +1,14 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
+import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
+import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
 import com.learnbridge.learn_bridge_back_end.dao.PostDAO;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementRequestDTO;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementResponseDTO;
 import com.learnbridge.learn_bridge_back_end.dto.NotificationDTO;
 import com.learnbridge.learn_bridge_back_end.dto.SessionDTO;
-import com.learnbridge.learn_bridge_back_end.entity.Agreement;
-import com.learnbridge.learn_bridge_back_end.entity.Notifications;
-import com.learnbridge.learn_bridge_back_end.entity.Post;
-import com.learnbridge.learn_bridge_back_end.entity.PostStatus;
+import com.learnbridge.learn_bridge_back_end.entity.*;
+import com.stripe.exception.StripeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,18 +29,23 @@ public class AgreementWorkflowService {
     private PostDAO postDAO;
 
 
-      // Instructor requests an agreement for a post
 
+      // Instructor requests an agreement from a Learner via post
     @Transactional
     public AgreementResponseDTO requestAgreement(Long instructorId, Long learnerId, Long postId) {
         return agreementService.createAgreement(instructorId, learnerId, postId);
     }
 
 
-      // Learner accepts an agreement offer from a notification
-
+    // Learner requests agreement from Instructor via instructor's profile
     @Transactional
-    public SessionDTO acceptAgreementOffer(Long notificationId) {
+    public AgreementResponseDTO learnerRequestsInstructor(Long learnerId, Long instructorId) {
+        return agreementService.createLearnerInitiatedAgreement(learnerId, instructorId);
+    }
+
+    // Learner accepts an agreement offer from a notification
+    @Transactional
+    public SessionDTO acceptInstructorAgreementOffer(Long notificationId) throws StripeException {
         // mark notification as read
         notificationsService.markNotificationAsRead(notificationId);
 
@@ -64,8 +69,11 @@ public class AgreementWorkflowService {
         postDAO.updatePost(post);
 
         // Create a session from the agreement
-        return sessionService.createSessionFromAgreement(agreement.getAgreementId());
+        return sessionService.createSessionFromInstructorAgreement(agreement.getAgreementId());
     }
+
+
+
 
     @Transactional
     public void rejectAgreementOffer(Long notificationId) {
@@ -82,4 +90,40 @@ public class AgreementWorkflowService {
         notificationsService.createAgreementRejectedNotification(agreement);
 
     }
+
+    /** Instructor accepts a learner-initiated request */
+    @Transactional
+    public SessionDTO acceptLearnerRequest(Long notificationId) throws StripeException {
+        // mark the instructor’s notification as read
+        notificationsService.markNotificationAsRead(notificationId);
+
+        // load the notification and agreement
+        Notifications note = notificationsService.findNotificationById(notificationId);
+        if (note == null || note.getAgreement() == null) {
+            throw new RuntimeException("Notification or agreement not found: " + notificationId);
+        }
+        Agreement ag = note.getAgreement();
+
+        // notify the learner that you’ve accepted their request
+        notificationsService.createLearnerRequestAcceptedNotification(ag);
+
+        // go straight to session creation
+        return sessionService.createSessionFromLearnerAgreement(ag.getAgreementId());
+    }
+
+    /** Instructor rejects a learner-initiated request */
+    @Transactional
+    public void rejectLearnerRequest(Long notificationId) {
+        notificationsService.markNotificationAsRead(notificationId);
+
+        Notifications note = notificationsService.findNotificationById(notificationId);
+        if (note == null || note.getAgreement() == null) {
+            throw new RuntimeException("Notification or agreement not found: " + notificationId);
+        }
+        Agreement ag = note.getAgreement();
+
+        // notify the learner that you’ve declined
+        notificationsService.createLearnerRequestRejectedNotification(ag);
+    }
+
 }

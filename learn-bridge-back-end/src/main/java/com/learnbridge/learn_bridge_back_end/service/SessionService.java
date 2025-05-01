@@ -3,10 +3,13 @@ package com.learnbridge.learn_bridge_back_end.service;
 import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.SessionDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -34,38 +37,56 @@ public class SessionService {
     @Autowired
     private CardDAO cardDAO;
 
+    @Autowired
+    private StripeService stripeService;
+
+    @Autowired
+    NotificationService notificationService;
+
+
+
 
     @Transactional
-    public SessionDTO createSessionFromAgreement(Long agreementId) {
+    public SessionDTO createSessionFromInstructorAgreement(Long agreementId) throws StripeException {
         Agreement agreement = agreementDAO.findAgreementById(agreementId);
         if (agreement == null) {
             throw new RuntimeException("Agreement not found with id: " + agreementId);
         }
 
-//        Learner learner = agreement.getLearner();
-//        if (learner == null) {
-//            throw new RuntimeException("Learner not found with id: " + agreementId);
-//        }
 
-        // In a real implementation, we would check payment here
-        // For now, we'll assume payment is successful
+        // 1. Compute amount in cents
+        long amountCents = agreement.getPost().getPrice()
+                .multiply(new BigDecimal(100))
+                .longValue();
 
-        // mock card
-        Card card = cardDAO.findCardByUserId(agreement.getLearner().getLearnerId());
+        // 2. Lookup default PaymentMethod ID from your Card entity
+        Card learnerCard = cardDAO.findDefaultCardByUserId(agreement.getLearner().getLearnerId());
+        String paymentMethodId = learnerCard.getStripePaymentMethodId();
+        // <— you’ll need to store this when saving cards
 
-        // create payment info record (mock)
-        PaymentInfo paymentInfo = new PaymentInfo();
-        paymentInfo.setAmount(agreement.getPost().getPrice());
+        // 3. Hold funds on learner’s card
+        PaymentIntent pi = stripeService.createAuthorization(
+                amountCents, "usd", paymentMethodId
+        );
 
-        paymentInfo.setCard(card);
-        paymentInfo.setPaymentDate(LocalDate.now());
-        paymentInfo.setUser(agreement.getLearner().getUser());
-        // set other payment details as needed
-        PaymentInfo savedPayment = paymentInfoDAO.savePaymentInfo(paymentInfo);
+        // 4. Persist PaymentInfo
+        PaymentInfo info = new PaymentInfo();
+        info.setUser(agreement.getLearner().getUser());
+        info.setCard(learnerCard);
+        info.setPaymentDate(LocalDate.now());
+        info.setAmount(agreement.getPost().getPrice());
+        info.setStripePaymentIntentId(pi.getId());
+        paymentInfoDAO.savePaymentInfo(info);
 
+        // 5. Notify learner of hold
+        notificationService.sendHoldNotification(
+                agreement.getLearner().getUser(),
+                agreement.getPost().getPrice(),
+                pi.getId()
+        );
         // create session
         Session session = new Session();
-        session.setTransaction(savedPayment);
+        session.setTransaction(info);
         session.setInstructor(agreement.getInstructor().getUser());
         session.setAgreement(agreement);
         session.setSessionStatus(SessionStatus.ONGOING);
@@ -90,6 +111,63 @@ public class SessionService {
         sessionParticipantsDAO.saveSessionParticipant(learnerParticipant);
 
         return convertToDTO(savedSession);
+    }
+
+
+
+    @Transactional
+    public SessionDTO createSessionFromLearnerAgreement(Long agreementId) throws StripeException {
+        Agreement ag = agreementDAO.findAgreementById(agreementId);
+        if (ag == null) {
+            throw new RuntimeException("Agreement not found: " + agreementId);
+        }
+
+        long amountCents = ag.getPrice().multiply(new BigDecimal(100)).longValue();
+
+        Card learnerCard = cardDAO.findDefaultCardByUserId(ag.getLearner().getLearnerId());
+        String paymentMethodId = learnerCard.getStripePaymentMethodId();
+
+        PaymentIntent pi = stripeService.createAuthorization(
+                amountCents, "usd", paymentMethodId
+        );
+
+        PaymentInfo info = new PaymentInfo();
+        info.setUser(ag.getLearner().getUser());
+        info.setCard(learnerCard);
+        info.setPaymentDate(LocalDate.now());
+        info.setAmount(ag.getPrice());
+        info.setStripePaymentIntentId(pi.getId());
+        paymentInfoDAO.savePaymentInfo(info);
+
+        notificationService.sendHoldNotification(
+                ag.getLearner().getUser(),
+                ag.getPrice(),
+                pi.getId()
+        );
+
+        // session
+        Session sess = new Session();
+        sess.setTransaction(info);
+        sess.setInstructor(ag.getInstructor().getUser());
+        sess.setAgreement(ag);
+        sess.setSessionStatus(SessionStatus.ONGOING);
+        sess.setChats(new HashSet<>());
+        sess.setParticipants(new HashSet<>());
+
+        Session saved = sessionDAO.saveSession(sess);
+
+        // chat container
+        Chat chat = new Chat();
+        chat.setSession(saved);
+        chat.setMessages(new HashSet<>());
+        chatDAO.saveChat(chat);
+
+        // learner as participant
+        SessionParticipants part = new SessionParticipants(saved.getSessionId(),
+                ag.getLearner().getLearnerId());
+        sessionParticipantsDAO.saveSessionParticipant(part);
+
+        return convertToDTO(saved);
     }
 
 

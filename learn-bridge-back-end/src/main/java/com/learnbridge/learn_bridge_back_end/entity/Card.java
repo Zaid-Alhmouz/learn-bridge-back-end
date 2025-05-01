@@ -36,6 +36,9 @@ public class Card {
     @Column(name =  "default_card")
     private boolean defaultCard;
 
+    @Column(name="stripe_pm_id")
+    private String stripePaymentMethodId;
+
 
 
     public Long getCardId() { return cardId; }
@@ -68,6 +71,14 @@ public class Card {
         this.defaultCard = defaultCard;
     }
 
+    public String getStripePaymentMethodId() {
+        return stripePaymentMethodId;
+    }
+
+    public void setStripePaymentMethodId(String stripePaymentMethodId) {
+        this.stripePaymentMethodId = stripePaymentMethodId;
+    }
+
     @Override
     public String toString() {
         return "Card{" +
@@ -78,6 +89,7 @@ public class Card {
                 ", cardType=" + cardType +
                 ", user=" + user +
                 ", defaultCard=" + defaultCard +
+                ", stripePaymentMethodId='" + stripePaymentMethodId + '\'' +
                 '}';
     }
 }

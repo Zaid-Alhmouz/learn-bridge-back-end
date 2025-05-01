@@ -103,7 +103,7 @@ public class PostController {
         return ResponseEntity.ok(updatedPost);
     }
 
-    @DeleteMapping("/{postId}")
+    @DeleteMapping("/{postId}") // http://localhost:8080/api/posts/5
     public ResponseEntity<?> deletePost(@AuthenticationPrincipal SecurityUser loggedUser, @PathVariable Long postId)
     {
         try {

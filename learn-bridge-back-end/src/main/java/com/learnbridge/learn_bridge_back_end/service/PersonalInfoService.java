@@ -67,6 +67,8 @@ public class PersonalInfoService {
             if (existingLearner == null) {
                 throw new RuntimeException("Learner not found for user id: " + userId);
             }
+            existingLearner.setFirstName(personalInfoDTO.getFirstName());
+            existingLearner.setLastName(personalInfoDTO.getLastName());
             existingLearner.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
             existingLearner.setPersonalImage(personalInfoDTO.getPersonalImage());
             // Update other learner-specific fields, if any
@@ -76,6 +78,8 @@ public class PersonalInfoService {
             if (existingInstructor == null) {
                 throw new RuntimeException("Instructor not found for user id: " + userId);
             }
+            existingInstructor.setFirstName(personalInfoDTO.getFirstName());
+            existingInstructor.setLastName(personalInfoDTO.getLastName());
             existingInstructor.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
             existingInstructor.setUniversityInfo(personalInfoDTO.getUniversityInfo());
             existingInstructor.setInstructorBio(personalInfoDTO.getBio());

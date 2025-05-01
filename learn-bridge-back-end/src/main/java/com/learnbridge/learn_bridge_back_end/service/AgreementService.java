@@ -32,6 +32,8 @@ public class AgreementService {
     @Autowired
     private NotificationService notificationsService;
 
+
+    // create Agreement between learner and instructor via learner's post
     @Transactional
     public AgreementResponseDTO createAgreement(Long instructorId, Long learnerId, Long postId) {
         // find instructor, learner
@@ -57,6 +59,7 @@ public class AgreementService {
         agreement.setInstructor(instructor);
         agreement.setLearner(learner);
         agreement.setPost(post);
+        agreement.setPrice(post.getPrice());
 
 
         Agreement savedAgreement = agreementDAO.saveAgreement(agreement);
@@ -79,6 +82,25 @@ public class AgreementService {
     }
 
 
+
+    @Transactional
+    public AgreementResponseDTO createLearnerInitiatedAgreement(Long learnerId, Long instructorId) {
+        Learner learner     = learnerDAO.findLearnerById(learnerId);
+        Instructor instructor = instructorDAO.findInstructorById(instructorId);
+
+        Agreement ag = new Agreement();
+        ag.setLearner(learner);
+        ag.setInstructor(instructor);
+        // no Post → store instructor’s avgPrice on the agreement itself (if you’ve added `price`)
+        ag.setPrice(instructor.getAvgPrice());
+
+        Agreement saved = agreementDAO.saveAgreement(ag);
+        notificationsService.createLearnerRequestNotification(saved);
+        return convertToResponseDTO(saved);
+    }
+
+
+
     public AgreementResponseDTO getAgreementById(Long agreementId) {
         Agreement agreement = agreementDAO.findAgreementById(agreementId);
         if (agreement == null) {
@@ -88,13 +110,30 @@ public class AgreementService {
     }
 
     private AgreementResponseDTO convertToResponseDTO(Agreement agreement) {
-        AgreementResponseDTO responseDTO = new AgreementResponseDTO();
-        responseDTO.setAgreementId(agreement.getAgreementId());
-        responseDTO.setInstructorName(agreement.getInstructor().getFirstName() + " " + agreement.getInstructor().getLastName());
-        responseDTO.setLearnerName(agreement.getLearner().getFirstName() + " " + agreement.getLearner().getLastName());
-        responseDTO.setPostSSubject(agreement.getPost().getSubject());
-        responseDTO.setPostStatus(agreement.getPost().getPostStatus().toString());
-        return responseDTO;
+        AgreementResponseDTO dto = new AgreementResponseDTO();
+        dto.setAgreementId(agreement.getAgreementId());
+        dto.setInstructorName(
+                agreement.getInstructor().getFirstName() + " " +
+                        agreement.getInstructor().getLastName()
+        );
+        dto.setLearnerName(
+                agreement.getLearner().getFirstName() + " " +
+                        agreement.getLearner().getLastName()
+        );
+
+        if (agreement.getPost() != null) {
+            dto.setPostSSubject(agreement.getPost().getSubject());
+            dto.setPostStatus(agreement.getPost().getPostStatus().toString());
+        } else {
+            // learner-initiated: no post
+            dto.setPostSSubject("N/A");
+            dto.setPostStatus("N/A");
+            // if you’ve added a price field on Agreement, you could also:
+            // dto.setPrice( agreement.getPrice().toString() );
+        }
+
+        return dto;
     }
+
 }
 

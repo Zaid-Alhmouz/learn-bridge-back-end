@@ -30,6 +30,21 @@ public class PaymentInfo {
     private BigDecimal amount;
 
 
+    @Column(name = "stripe_payment_intent_id")
+    private String stripePaymentIntentId;
+
+    @Column(name = "stripe_charge_id")
+    private String stripeChargeId;
+
+    @Column(name = "stripe_refund_id")
+    private String stripeRefundId;
+
+    @Column(name = "captured", nullable = false)
+    private Boolean captured = false;
+
+    @Column(name = "refunded", nullable = false)
+    private Boolean refunded = false;
+
     public Long getPaymentId() {
         return transactionId;
     }
@@ -68,13 +83,59 @@ public class PaymentInfo {
         this.amount = amount;
     }
 
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    public String getStripeChargeId() {
+        return stripeChargeId;
+    }
+
+    public void setStripeChargeId(String stripeChargeId) {
+        this.stripeChargeId = stripeChargeId;
+    }
+
+    public String getStripeRefundId() {
+        return stripeRefundId;
+    }
+
+    public void setStripeRefundId(String stripeRefundId) {
+        this.stripeRefundId = stripeRefundId;
+    }
+
+    public Boolean getCaptured() {
+        return captured;
+    }
+
+    public void setCaptured(Boolean captured) {
+        this.captured = captured;
+    }
+
+    public Boolean getRefunded() {
+        return refunded;
+    }
+
+    public void setRefunded(Boolean refunded) {
+        this.refunded = refunded;
+    }
+
     @Override
     public String toString() {
         return "PaymentInfo{" +
-                "paymentId=" + transactionId +
+                "transactionId=" + transactionId +
                 ", user=" + user +
+                ", card=" + card +
                 ", paymentDate=" + paymentDate +
                 ", amount=" + amount +
+                ", stripePaymentIntentId='" + stripePaymentIntentId + '\'' +
+                ", stripeChargeId='" + stripeChargeId + '\'' +
+                ", stripeRefundId='" + stripeRefundId + '\'' +
+                ", captured=" + captured +
+                ", refunded=" + refunded +
                 '}';
     }
 }

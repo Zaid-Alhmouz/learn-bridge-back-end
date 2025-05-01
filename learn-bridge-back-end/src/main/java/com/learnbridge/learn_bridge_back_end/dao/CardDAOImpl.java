@@ -86,4 +86,14 @@ public class CardDAOImpl implements CardDAO {
         Card card = query.getSingleResult();
         return card;
     }
+
+    @Override
+    public Card findDefaultCardByUserId(Long userId) {
+        String sql = "from Card c where c.user.userId = :userId AND c.defaultCard = :isDefault";
+        TypedQuery<Card> query = entityManager.createQuery(sql, Card.class);
+        query.setParameter("isDefault", true);
+        query.setParameter("userId", userId);
+        Card card = query.getSingleResult();
+        return card;
+    }
 }

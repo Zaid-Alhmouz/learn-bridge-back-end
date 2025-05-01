@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,12 +65,18 @@ public class PostService {
     // retrieves posts created by a given author (learner)
     public List<PostDTO> getPostsByAuthorId(Long authorId) {
         List<Post> posts = postDAO.findAllPostsByUserId(authorId);
+        if (posts == null || posts.isEmpty()) {
+            return new ArrayList<>();
+        }
         return PostMapper.toDTOList(posts);
     }
 
     // for default posts to be retrieved when the instructor navigates to the posts page, retrieves all posts that suits his favourite category.
     public List<PostDTO> getPostsByFavouriteCategory(Long authorId, String category) {
         List<Post> posts = postDAO.findAllPostsByFavouriteCategory(category);
+        if (posts == null || posts.isEmpty()) {
+            return new ArrayList<>();
+        }
         return PostMapper.toDTOList(posts);
     }
 
@@ -130,6 +137,9 @@ public class PostService {
     // retrieve all pending posts for the admin
     public List<PostDTO> getPendingPosts() {
         List<Post> pendingPosts = postDAO.findAllPendingPosts();
+        if (pendingPosts == null || pendingPosts.isEmpty()) {
+            return new ArrayList<>();
+        }
         return PostMapper.toDTOList(pendingPosts);
     }
 
@@ -157,7 +167,8 @@ public class PostService {
             throw new RuntimeException("Post not found");
         }
 
-        else{
+        else
+        {
             postToBeRejected.setPostStatus(PostStatus.REJECTED);
             postToBeRejected.setApprovalDate(LocalDateTime.now());
             postDAO.updatePost(postToBeRejected);

@@ -9,6 +9,7 @@ import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.AgreementWorkflowService;
 import com.learnbridge.learn_bridge_back_end.service.NotificationService;
 import com.learnbridge.learn_bridge_back_end.service.NotificationService;
+import com.stripe.exception.StripeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,6 +39,17 @@ public class AgreementController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/request-instructor/{instructorId}")
+    public ResponseEntity<AgreementResponseDTO> requestInstructor(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long instructorId) {
+        Long learnerId = user.getUser().getId();
+        AgreementResponseDTO dto =
+                agreementWorkflowService.learnerRequestsInstructor(learnerId, instructorId);
+        return ResponseEntity.ok(dto);
+    }
+
+
 
     @GetMapping("/notifications")
     public ResponseEntity<List<NotificationDTO>> getUserNotifications(@AuthenticationPrincipal SecurityUser securityUser) {
@@ -48,14 +60,29 @@ public class AgreementController {
 
 
     @PostMapping("/notifications/{notificationId}/accept")
-    public ResponseEntity<SessionDTO> acceptAgreementOffer(@PathVariable Long notificationId) {
-        SessionDTO session = agreementWorkflowService.acceptAgreementOffer(notificationId);
+    public ResponseEntity<SessionDTO> acceptInstructorAgreementOffer(@PathVariable Long notificationId) throws StripeException {
+        SessionDTO session = agreementWorkflowService.acceptInstructorAgreementOffer(notificationId);
         return ResponseEntity.ok(session);
     }
 
     @PostMapping("/notifications/{notificationId}/reject")
     public ResponseEntity<Void> rejectAgreementOffer(@PathVariable Long notificationId) {
         agreementWorkflowService.rejectAgreementOffer(notificationId);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/notifications/{notificationId}/accept-learner-request")
+    public ResponseEntity<SessionDTO> acceptLearnerRequest(
+            @PathVariable Long notificationId) throws StripeException {
+        SessionDTO session = agreementWorkflowService.acceptLearnerRequest(notificationId);
+        return ResponseEntity.ok(session);
+    }
+
+    @PostMapping("/notifications/{notificationId}/reject-learner-request")
+    public ResponseEntity<Void> rejectLearnerRequest(
+            @PathVariable Long notificationId) {
+        agreementWorkflowService.rejectLearnerRequest(notificationId);
         return ResponseEntity.ok().build();
     }
 }
