@@ -59,4 +59,8 @@ public class SecurityUser implements UserDetails {
     public boolean isCredentialsNonExpired() {
         return true;
     }
+
+    public String getRole() {
+        return user.getUserRole().name();
+    }
 }

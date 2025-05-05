@@ -1,5 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,6 +26,7 @@ public class User {
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
+    @JsonProperty("role")
     private UserRole userRole;
 
     @Column(name = "account_status")

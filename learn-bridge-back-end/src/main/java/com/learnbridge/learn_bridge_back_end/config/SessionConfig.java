@@ -13,7 +13,7 @@ public class SessionConfig {
         DefaultCookieSerializer serializer = new DefaultCookieSerializer();
         serializer.setCookieName("JSESSIONID");
         serializer.setSameSite("None");
-        serializer.setUseSecureCookie(true);
+        serializer.setUseSecureCookie(false);
         serializer.setUseHttpOnlyCookie(true);
         return serializer;
     }
