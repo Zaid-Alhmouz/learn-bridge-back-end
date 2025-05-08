@@ -27,6 +27,9 @@ public class PostService {
     @Autowired
     private LearnerDAO learnerDAO;
 
+    @Autowired
+    private NotificationService notificationService;
+
 
     // create post by learner
     public Post createPost(CreatePostRequest postRequest, SecurityUser loggedUser) {
@@ -147,14 +150,17 @@ public class PostService {
     public PostDTO acceptPendingPost(SecurityUser loggedUser, PostId compositeId) {
 
         Post postToBeAccepted = postDAO.findPostById(compositeId);
+
         if(postToBeAccepted == null) {
             throw new RuntimeException("Post not found");
         }
 
         else{
+            User author = userDAO.findUserById(postToBeAccepted.getAuthorId());
             postToBeAccepted.setPostStatus(PostStatus.ACCEPTED);
             postToBeAccepted.setApprovalDate(LocalDateTime.now());
             postDAO.updatePost(postToBeAccepted);
+            notificationService.sendAcceptPostNotification(author);
             return PostMapper.toDTO(postToBeAccepted);
         }
     }
@@ -169,9 +175,11 @@ public class PostService {
 
         else
         {
+            User author = userDAO.findUserById(postToBeRejected.getAuthorId());
             postToBeRejected.setPostStatus(PostStatus.REJECTED);
             postToBeRejected.setApprovalDate(LocalDateTime.now());
             postDAO.updatePost(postToBeRejected);
+            notificationService.sendRejectPostNotification(author);
             return PostMapper.toDTO(postToBeRejected);
         }
     }

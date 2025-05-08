@@ -19,54 +19,41 @@ public class StripeService {
         Stripe.apiKey = apiKey;
     }
 
-    // 1. Retrieve or create a Stripe Customer by email
     public Customer getOrCreateCustomer(String email) throws StripeException {
-        // List existing customers filtered by email
         Map<String, Object> listParams = new HashMap<>();
         listParams.put("email", email);
         List<Customer> customers = Customer.list(listParams).getData();
         if (!customers.isEmpty()) {
             return customers.get(0);
         }
-        // Otherwise create new customer
         Map<String, Object> createParams = new HashMap<>();
         createParams.put("email", email);
         return Customer.create(createParams);
     }
 
-    // 2. Create a SetupIntent to vault a card for off-session use
-    public SetupIntent createSetupIntent(String customerId) throws StripeException {
-        SetupIntentCreateParams params = SetupIntentCreateParams.builder()
-                .setCustomer(customerId)
-                .addPaymentMethodType("card")
-                .setConfirm(true)
-                .build();
-        return SetupIntent.create(params);
-    }
+    public PaymentMethod createAndAttachCard(String customerId, String cardNumber, String expMonth, String expYear, String cvc) throws StripeException {
+        Map<String, Object> cardParams = new HashMap<>();
+        cardParams.put("number", cardNumber);
+        cardParams.put("exp_month", expMonth);
+        cardParams.put("exp_year", expYear);
+        cardParams.put("cvc", cvc);
 
-    // 3. Attach a PaymentMethod to a Customer and set it as default
-    public PaymentMethod attachPaymentMethod(String customerId, String paymentMethodId) throws StripeException {
-        // Retrieve the PaymentMethod
-        PaymentMethod pm = PaymentMethod.retrieve(paymentMethodId);
+        Map<String, Object> paymentMethodParams = new HashMap<>();
+        paymentMethodParams.put("type", "card");
+        paymentMethodParams.put("card", cardParams);
 
-        // Attach the PaymentMethod to the customer
-        pm.attach(Map.of("customer", customerId));
+        PaymentMethod paymentMethod = PaymentMethod.create(paymentMethodParams);
+        paymentMethod.attach(Map.of("customer", customerId));
 
-        // Retrieve the Customer object
         Customer customer = Customer.retrieve(customerId);
-
-        // Update the customer's default payment method
         customer.update(Map.of(
-                "invoice_settings", Map.of("default_payment_method", pm.getId())
+                "invoice_settings", Map.of("default_payment_method", paymentMethod.getId())
         ));
 
-        return pm;
+        return paymentMethod;
     }
 
-
-    // 4. Authorize (hold) funds using a PaymentIntent with manual capture
-    public PaymentIntent authorizePayment(long amountCents, String currency,
-                                          String customerId, String paymentMethodId) throws StripeException {
+    public PaymentIntent authorizePayment(long amountCents, String currency, String customerId, String paymentMethodId) throws StripeException {
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(amountCents)
                 .setCurrency(currency)
@@ -78,21 +65,17 @@ public class StripeService {
         return PaymentIntent.create(params);
     }
 
-    // 5. Capture a previously authorized PaymentIntent
     public PaymentIntent capturePayment(String paymentIntentId) throws StripeException {
         PaymentIntent pi = PaymentIntent.retrieve(paymentIntentId);
         return pi.capture();
     }
 
-    // 6. Cancel (release) a manual-capture authorization
     public PaymentIntent cancelAuthorization(String paymentIntentId) throws StripeException {
         PaymentIntent pi = PaymentIntent.retrieve(paymentIntentId);
         return pi.cancel();
     }
 
-    // 7. Transfer captured funds to a connected instructor account
-    public Transfer transferToInstructor(long amountCents, String currency,
-                                         String connectedAccountId) throws StripeException {
+    public Transfer transferToInstructor(long amountCents, String currency, String connectedAccountId) throws StripeException {
         TransferCreateParams params = TransferCreateParams.builder()
                 .setAmount(amountCents)
                 .setCurrency(currency)
@@ -101,7 +84,6 @@ public class StripeService {
         return Transfer.create(params);
     }
 
-    // 8. Issue a full or partial refund against a charge
     public Refund refundPayment(String chargeId, Long amountToRefundCents) throws StripeException {
         RefundCreateParams.Builder builder = RefundCreateParams.builder()
                 .setCharge(chargeId);
@@ -110,4 +92,26 @@ public class StripeService {
         }
         return Refund.create(builder.build());
     }
+
+
+
+    public PaymentMethod retrieveAndAttachPaymentMethod(String customerId, String paymentMethodId) throws StripeException {
+        PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
+
+        // Attach payment method to customer
+        Map<String, Object> attachParams = new HashMap<>();
+        attachParams.put("customer", customerId);
+        paymentMethod.attach(attachParams);
+
+        // Optionally set as default payment method for the customer
+        Customer customer = Customer.retrieve(customerId);
+        Map<String, Object> updateParams = new HashMap<>();
+        Map<String, Object> invoiceSettings = new HashMap<>();
+        invoiceSettings.put("default_payment_method", paymentMethod.getId());
+        updateParams.put("invoice_settings", invoiceSettings);
+        customer.update(updateParams);
+
+        return paymentMethod;
+    }
+
 }

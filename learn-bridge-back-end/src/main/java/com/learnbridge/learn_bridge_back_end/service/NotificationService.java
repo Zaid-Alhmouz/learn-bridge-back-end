@@ -3,6 +3,7 @@ package com.learnbridge.learn_bridge_back_end.service;
 import com.learnbridge.learn_bridge_back_end.dao.NotificationsDAO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.dto.NotificationDTO;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -221,8 +222,33 @@ public class NotificationService {
         return notificationsDAO.saveNotification(notification);
     }
 
+    @Transactional
+    public Notifications sendAcceptPostNotification(User learner) {
 
+        Notifications notification = new Notifications();
+        notification.setUser(learner);
+        notification.setNotificationType("POST_ACCEPTED");
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setMessage(String.format(
+                "Your post has been accepted."
+        ));
+        return notificationsDAO.saveNotification(notification);
+    }
 
+    @Transactional
+    public Notifications sendRejectPostNotification(User learner) {
+        Notifications notification = new Notifications();
+        notification.setUser(learner);
+        notification.setNotificationType("POST_REJECTED");
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setMessage(String.format(
+                "Your post has been rejected."
+        ));
+
+        return notificationsDAO.saveNotification(notification);
+    }
 
     public Notifications findNotificationById(Long notificationId) {
         return notificationsDAO.findNotificationById(notificationId);
