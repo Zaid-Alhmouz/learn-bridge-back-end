@@ -107,7 +107,7 @@ public class PostService {
         // update the post fields with the values from the DTO
         post.setContent(editPostRequest.getContent());
         post.setSubject(editPostRequest.getSubject());
-        post.setPostStatus(PostStatus.PENDING);
+        post.setPostStatus(editPostRequest.getPostStatus());
         post.setCategory(editPostRequest.getCategory());
         post.setPrice(editPostRequest.getPrice());
 
