@@ -3,15 +3,17 @@ package com.learnbridge.learn_bridge_back_end.service;
 import com.learnbridge.learn_bridge_back_end.dao.CardDAO;
 import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardRequest;
+import com.learnbridge.learn_bridge_back_end.dto.AddCardResponse;
 import com.learnbridge.learn_bridge_back_end.entity.Card;
-import com.learnbridge.learn_bridge_back_end.entity.CardType;
 import com.learnbridge.learn_bridge_back_end.entity.User;
-import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.util.CardMapper;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentMethod;
+import com.stripe.model.SetupIntent;
+import com.stripe.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,58 +26,62 @@ public class CardService {
     @Autowired
     private UserDAO userDAO;
 
+    @Autowired
+    private StripeService stripeService;
 
-    public CardType determineCardType(String cardNumber) {
-        if (cardNumber == null || cardNumber.isEmpty()) {
-            throw new IllegalArgumentException("Card number is empty or null");
-        }
-
-        // remove any spaces or hyphens from the card number.
-        cardNumber = cardNumber.replaceAll("[\\s-]", "");
-        if (cardNumber.startsWith("4")) {
-            return CardType.VISA;
-        } else if (cardNumber.startsWith("5")) {
-            return CardType.MASTERCARD;
-        } else if (cardNumber.startsWith("34") || cardNumber.startsWith("37")) {
-            return CardType.AMERICAN_EXPRESS;
-        } else if (cardNumber.startsWith("6")) {
-            return CardType.DISCOVER;
-        }
-        return CardType.UNKNOWN;
-    }
-
-
-
-    public Card addCard(AddCardRequest request, SecurityUser loggedUser) {
-        Long userId = loggedUser.getUser().getId();
+    /**
+     * Adds a new card for the logged-in user:
+     * 1. Creates or retrieves a Stripe Customer
+     * 2. Generates a SetupIntent for card vaulting
+     * 3. Attaches the PaymentMethod to the Customer
+     * 4. Updates the User entity with stripeCustomerId
+     * 5. Persists Card entity with stripePaymentMethodId
+     * 6. Returns a safe AddCardResponse DTO
+     */
+    @Transactional
+    public AddCardResponse addCard(AddCardRequest request, Long userId) throws StripeException {
+        // 1. Fetch user
         User user = userDAO.findUserById(userId);
         if (user == null) {
-            throw new RuntimeException("User not found with id: " + userId);
+            throw new IllegalArgumentException("User not found: " + userId);
         }
 
+        // 2. Create or retrieve Stripe Customer
+        Customer customer = stripeService.getOrCreateCustomer(user.getEmail());
+        // Persist stripeCustomerId on user
+        user.setStripeCustomerId(customer.getId());
+        userDAO.updateUser(user);
+
+        // 3. Create SetupIntent (frontend will confirm via Stripe.js)
+        SetupIntent setupIntent = stripeService.createSetupIntent(customer.getId());
+        // Optionally return setupIntent.getClientSecret() if needed by frontend
+
+        // 4. Attach PaymentMethod
+        PaymentMethod paymentMethod = stripeService.attachPaymentMethod(
+                customer.getId(),
+                request.getPaymentMethodId()
+        );
+
+        // 5. Persist Card entity
         Card card = new Card();
-        card.setCardNumber(request.getCardNumber());
-        card.setExpireDate(request.getExpireDate());
-        card.setHolderName(request.getHolderName());
-
-        // automatically determine the card type based on the card number.
-        card.setCardType(determineCardType(request.getCardNumber()));
-
-        List<Card> userCards = cardDAO.findAllCardsByUserId(userId);
-
-        if (userCards.isEmpty() || userCards == null) {
-            card.setDefaultCard(true);
-        }
-        else{
-            card.setDefaultCard(false);
-        }
-
-
-
         card.setUser(user);
-
+        card.setStripePaymentMethodId(paymentMethod.getId());
+        card.setHolderName(request.getHolderName());
+        card.setExpireDate(request.getExpireDate());
+        // Determine default: first card or explicit flag
+        List<Card> existing = cardDAO.findAllCardsByUserId(userId);
+        boolean isDefault = existing.isEmpty() || request.isDefault();
+        card.setDefaultCard(isDefault);
         cardDAO.saveCard(card);
-        return card;
+
+        // 6. Prepare response
+        AddCardResponse response = new AddCardResponse();
+        response.setId(card.getCardId());
+        response.setLast4(paymentMethod.getCard().getLast4());
+        response.setBrand(paymentMethod.getCard().getBrand());
+        response.setDefault(isDefault);
+
+        return response;
     }
 
     public AddCardRequest setDefaultCard(Long cardId, Long userId) {

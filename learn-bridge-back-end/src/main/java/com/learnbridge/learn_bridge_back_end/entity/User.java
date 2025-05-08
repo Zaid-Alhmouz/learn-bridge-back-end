@@ -18,7 +18,7 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "password")
@@ -34,7 +34,8 @@ public class User {
     private AccountStatus accountStatus;
 
 
-
+    @Column(name = "stripe_customer_id", length = 255, unique = true)
+    private String stripeCustomerId;
 
 
     public Long getId() {
@@ -44,7 +45,6 @@ public class User {
     public String getFirstName() {
         return firstName;
     }
-
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
@@ -52,7 +52,6 @@ public class User {
     public String getLastName() {
         return lastName;
     }
-
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
@@ -60,7 +59,6 @@ public class User {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
     }
@@ -68,7 +66,6 @@ public class User {
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -76,7 +73,6 @@ public class User {
     public UserRole getUserRole() {
         return userRole;
     }
-
     public void setUserRole(UserRole userRole) {
         this.userRole = userRole;
     }
@@ -84,9 +80,15 @@ public class User {
     public AccountStatus getAccountStatus() {
         return accountStatus;
     }
-
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
+    }
+
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
     }
 
     @Override
@@ -96,9 +98,9 @@ public class User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
                 ", userRole=" + userRole +
                 ", accountStatus=" + accountStatus +
+                ", stripeCustomerId='" + stripeCustomerId + '\'' +
                 '}';
     }
 }

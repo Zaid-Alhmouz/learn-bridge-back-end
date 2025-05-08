@@ -2,7 +2,6 @@ package com.learnbridge.learn_bridge_back_end.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
 import com.learnbridge.learn_bridge_back_end.converter.CustomYearMonthDeserializer;
 import com.learnbridge.learn_bridge_back_end.converter.CustomYearMonthSerializer;
 import com.learnbridge.learn_bridge_back_end.entity.Card;
@@ -10,40 +9,42 @@ import com.learnbridge.learn_bridge_back_end.entity.Card;
 import java.time.YearMonth;
 
 public class AddCardRequest {
+    // Card details for display / validation only
     private String cardNumber;
     private String holderName;
+
     @JsonDeserialize(using = CustomYearMonthDeserializer.class)
     @JsonSerialize(using = CustomYearMonthSerializer.class)
     private YearMonth expireDate;
+
+
+    // that must be sent to the backend to attach to the customer.
+    private String paymentMethodId;
+
+    // flags to guide frontend UI
     private boolean isExpired;
     private boolean isDefault;
 
-
-
-
     public AddCardRequest() {}
 
-    public AddCardRequest(Card card)
-    {
-        this.cardNumber = card.getCardNumber();
-        this.expireDate = card.getExpireDate();
-        this.holderName = card.getHolderName();
-        this.isDefault = card.isDefaultCard();
+    // Constructor for mapping back from entity if needed
+    public AddCardRequest(Card card) {
+        this.cardNumber   = card.getCardNumber();
+        this.holderName   = card.getHolderName();
+        this.expireDate   = card.getExpireDate();
+        this.isDefault    = card.isDefaultCard();
+        this.paymentMethodId = card.getStripePaymentMethodId();
     }
 
-    // Getters and setters
+
+
     public String getCardNumber() {
         return cardNumber;
     }
     public void setCardNumber(String cardNumber) {
         this.cardNumber = cardNumber;
     }
-    public YearMonth getExpireDate() {
-        return expireDate;
-    }
-    public void setExpireDate(YearMonth expireDate) {
-        this.expireDate = expireDate;
-    }
+
     public String getHolderName() {
         return holderName;
     }
@@ -51,10 +52,23 @@ public class AddCardRequest {
         this.holderName = holderName;
     }
 
+    public YearMonth getExpireDate() {
+        return expireDate;
+    }
+    public void setExpireDate(YearMonth expireDate) {
+        this.expireDate = expireDate;
+    }
+
+    public String getPaymentMethodId() {
+        return paymentMethodId;
+    }
+    public void setPaymentMethodId(String paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
     public boolean isExpired() {
         return isExpired;
     }
-
     public void setExpired(boolean expired) {
         isExpired = expired;
     }
@@ -62,7 +76,6 @@ public class AddCardRequest {
     public boolean isDefault() {
         return isDefault;
     }
-
     public void setDefault(boolean aDefault) {
         isDefault = aDefault;
     }
@@ -73,6 +86,7 @@ public class AddCardRequest {
                 "cardNumber='" + cardNumber + '\'' +
                 ", holderName='" + holderName + '\'' +
                 ", expireDate=" + expireDate +
+                ", paymentMethodId='" + paymentMethodId + '\'' +
                 ", isExpired=" + isExpired +
                 ", isDefault=" + isDefault +
                 '}';

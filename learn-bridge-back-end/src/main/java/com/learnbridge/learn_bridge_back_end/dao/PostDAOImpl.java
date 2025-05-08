@@ -27,7 +27,8 @@ public class PostDAOImpl implements PostDAO {
     @Override
     @Transactional
     public void updatePost(Post post) {
-        Post postToUpdate = entityManager.find(Post.class, post.getPostId());
+        PostId postId = new PostId(post.getAuthorId(), post.getPostId());
+        Post postToUpdate = entityManager.find(Post.class, postId);
         if (postToUpdate != null) {
             entityManager.merge(post);
         }

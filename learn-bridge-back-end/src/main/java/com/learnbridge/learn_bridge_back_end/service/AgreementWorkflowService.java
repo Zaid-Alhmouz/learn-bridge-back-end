@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.service;
 
 import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
 import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
+import com.learnbridge.learn_bridge_back_end.dao.NotificationsDAO;
 import com.learnbridge.learn_bridge_back_end.dao.PostDAO;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementRequestDTO;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementResponseDTO;
@@ -27,6 +28,9 @@ public class AgreementWorkflowService {
 
     @Autowired
     private PostDAO postDAO;
+
+    @Autowired
+    NotificationsDAO notificationsDAO;
 
 
 
@@ -81,7 +85,7 @@ public class AgreementWorkflowService {
         notificationsService.markNotificationAsRead(notificationId);
 
 
-        Notifications notice = notificationsService.findNotificationById(notificationId);
+        Notifications notice = notificationsDAO.findNotificationById(notificationId);
         if (notice == null || notice.getAgreement() == null) {
             throw new RuntimeException("Notification or agreement not found");
         }
@@ -98,7 +102,7 @@ public class AgreementWorkflowService {
         notificationsService.markNotificationAsRead(notificationId);
 
         // load the notification and agreement
-        Notifications note = notificationsService.findNotificationById(notificationId);
+        Notifications note = notificationsDAO.findNotificationById(notificationId);
         if (note == null || note.getAgreement() == null) {
             throw new RuntimeException("Notification or agreement not found: " + notificationId);
         }
