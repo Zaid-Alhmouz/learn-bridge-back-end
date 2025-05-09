@@ -31,59 +31,53 @@ public class CardService {
     private StripeService stripeService;
 
     /**
-     * Adds a new payment card for a user
-     * Supports both secure tokenized approach (paymentMethodId) and raw card details
+     * Adds a new payment card for a user.
+     * Supports both secure tokenized approach (paymentMethodId) and raw card details.
      */
     @Transactional
     public AddCardResponse addCard(AddCardRequest request, Long userId) throws StripeException {
-        // 1. Fetch the user
         User user = userDAO.findUserById(userId);
         if (user == null) {
             throw new IllegalArgumentException("User not found: " + userId);
         }
 
-        // 2. Create or retrieve Stripe Customer
         Customer customer = stripeService.getOrCreateCustomer(user.getEmail());
-        if (user.getStripeCustomerId() == null || !user.getStripeCustomerId().equals(customer.getId())) {
+        if (!customer.getId().equals(user.getStripeCustomerId())) {
             user.setStripeCustomerId(customer.getId());
             userDAO.updateUser(user);
         }
 
-        // 3. Handle card processing with Stripe
         PaymentMethod paymentMethod;
-
-        if (request.hasPaymentMethodId()) {
-            // Preferred approach: use the payment method ID
+        if (request.getPaymentMethodId() != null && !request.getPaymentMethodId().isEmpty()) {
             paymentMethod = stripeService.retrieveAndAttachPaymentMethod(
-                    customer.getId(),
-                    request.getPaymentMethodId()
+                    customer.getId(), request.getPaymentMethodId()
             );
         } else {
-            throw new IllegalArgumentException("paymentMethodId must be provided. Raw card details are not supported.");
+            // Use raw card details to create and attach a new PaymentMethod
+            YearMonth exp = request.getExpireDate();
+            paymentMethod = stripeService.createAndAttachCard(
+                    customer.getId(),
+                    request.getCardNumber(),
+                    String.valueOf(exp.getMonthValue()),
+                    String.valueOf(exp.getYear()),
+                    request.getCvc()
+            );
         }
 
-        // 4. Persist Card entity locally
+        // Persist Card entity locally
         Card card = new Card();
         card.setUser(user);
         card.setStripePaymentMethodId(paymentMethod.getId());
         card.setHolderName(request.getHolderName());
-
-        // Get card details from Stripe
         card.setExpireDate(YearMonth.of(
-                Integer.parseInt(paymentMethod.getCard().getExpYear().toString()),
-                Integer.parseInt(paymentMethod.getCard().getExpMonth().toString())
+                paymentMethod.getCard().getExpYear().intValue(),
+                paymentMethod.getCard().getExpMonth().intValue()
         ));
-
-        // Store last 4 digits and brand for display purposes
         card.setCardNumber("xxxxxxxxxxxx" + paymentMethod.getCard().getLast4());
 
-        // Determine default status: first card or explicit flag
         List<Card> existing = cardDAO.findAllCardsByUserId(userId);
         boolean isDefault = existing.isEmpty() || request.isDefault();
-        card.setDefaultCard(isDefault);
-
-        // If this is set as default, unset any previous default card
-        if (isDefault && !existing.isEmpty()) {
+        if (isDefault) {
             for (Card existingCard : existing) {
                 if (existingCard.isDefaultCard()) {
                     existingCard.setDefaultCard(false);
@@ -91,13 +85,11 @@ public class CardService {
                 }
             }
         }
-
+        card.setDefaultCard(isDefault);
         card.setCardType(CardType.fromStripeBrand(paymentMethod.getCard().getBrand()));
 
-        // Save the new card
         cardDAO.saveCard(card);
 
-        // 5. Build and return the response DTO
         AddCardResponse response = new AddCardResponse();
         response.setId(card.getCardId());
         response.setLast4(paymentMethod.getCard().getLast4());
@@ -108,30 +100,21 @@ public class CardService {
 
     @Transactional
     public AddCardRequest setDefaultCard(Long cardId, Long userId) {
-        // Fetch the card
         Card card = cardDAO.findCardById(cardId);
-        if (card == null) {
-            throw new RuntimeException("Card not found with id: " + cardId);
+        if (card == null || !card.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Card not found or not owned by user");
         }
 
-        // Verify ownership
-        if (card.getUser().getId() != userId) {
-            throw new RuntimeException("User is not the owner of the card");
+        List<Card> existing = cardDAO.findAllCardsByUserId(userId);
+        for (Card existingCard : existing) {
+            if (existingCard.isDefaultCard()) {
+                existingCard.setDefaultCard(false);
+                cardDAO.updateCard(existingCard);
+            }
         }
-
-        // Find and update the previous default card
-        Card previousDefaultCard = cardDAO.findDefaultCard();
-        if (previousDefaultCard != null && !previousDefaultCard.getCardId().equals(cardId)) {
-            previousDefaultCard.setDefaultCard(false);
-            cardDAO.updateCard(previousDefaultCard);
-        }
-
-        // Set this card as default
         card.setDefaultCard(true);
+        cardDAO.updateCard(card);
 
-        Card editedCard = cardDAO.updateCard(card);
-
-        // Map to response object
-        return CardMapper.toAddCardRequest(editedCard);
+        return CardMapper.toAddCardRequest(card);
     }
 }

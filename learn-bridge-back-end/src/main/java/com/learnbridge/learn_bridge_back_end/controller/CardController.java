@@ -6,10 +6,12 @@ import com.learnbridge.learn_bridge_back_end.entity.Card;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.CardService;
 import com.learnbridge.learn_bridge_back_end.util.CardMapper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/cards")
@@ -20,7 +22,14 @@ public class CardController {
     private CardService cardService;
 
     @PostMapping("/add")
-    public ResponseEntity<?> addCard(@RequestBody AddCardRequest cardRequest, @AuthenticationPrincipal SecurityUser loggedUser) {
+    public ResponseEntity<?> addCard(
+            @Valid @RequestBody AddCardRequest cardRequest,
+            BindingResult bindingResult,
+            @AuthenticationPrincipal SecurityUser loggedUser) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
+
         try {
             AddCardResponse savedCard = cardService.addCard(cardRequest, loggedUser.getUser().getId());
             return ResponseEntity.ok(savedCard);
@@ -30,13 +39,15 @@ public class CardController {
     }
 
     @PutMapping("/set-default/{cardId}")
-    public ResponseEntity<?> setDefaultCard(@PathVariable Long cardId, @AuthenticationPrincipal SecurityUser loggedUser) {
+    public ResponseEntity<?> setDefaultCard(
+            @PathVariable Long cardId,
+            @AuthenticationPrincipal SecurityUser loggedUser) {
         Long userId = loggedUser.getUser().getId();
 
         AddCardRequest editedCard = cardService.setDefaultCard(cardId, userId);
 
         if (editedCard == null) {
-           return ResponseEntity.badRequest().body(editedCard);
+            return ResponseEntity.badRequest().body("Unable to set default card.");
         }
         return ResponseEntity.ok(editedCard);
     }
