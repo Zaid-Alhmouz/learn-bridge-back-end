@@ -1,16 +1,17 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
-import com.learnbridge.learn_bridge_back_end.dao.AgreementDAO;
-import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
-import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
-import com.learnbridge.learn_bridge_back_end.dao.PostDAO;
+import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementRequestDTO;
 import com.learnbridge.learn_bridge_back_end.dto.AgreementResponseDTO;
+import com.learnbridge.learn_bridge_back_end.dto.AskForAgreementInfo;
 import com.learnbridge.learn_bridge_back_end.entity.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,15 @@ public class AgreementService {
 
     @Autowired
     private NotificationService notificationsService;
+
+    @Autowired
+    private SessionDAO sessionDAO;
+
+    @Autowired
+    private RatingDAO ratingDAO;
+
+    @Autowired
+    private NotificationsDAO notificationsDAO;
 
 
     // create Agreement between learner and instructor via learner's post
@@ -133,6 +143,62 @@ public class AgreementService {
         }
 
         return dto;
+    }
+
+
+    @Transactional(readOnly = true)
+    public AskForAgreementInfo getAskForAgreementInfo(Long notificationId) {
+        Notifications notification = notificationsDAO.findNotificationById(notificationId);
+        if (notification == null || notification.getAgreement() == null) {
+            throw new EntityNotFoundException("Notification or its Agreement not found: " + notificationId);
+        }
+        Agreement ag = notification.getAgreement();
+
+        Instructor instr = ag.getInstructor();
+        Learner learner = ag.getLearner();
+        Post post = ag.getPost(); // may be null if learner-initiated
+
+        AskForAgreementInfo info = new AskForAgreementInfo();
+        info.setAgreementId(ag.getAgreementId());
+        info.setInstructorId(instr.getInstructorId());
+        info.setLearnerId(learner.getLearnerId());
+        info.setPostId(post != null ? post.getPostId() : null);
+
+        // Basic subject/category/description
+        info.setCategory(post != null ? post.getCategory() : null);
+        info.setSubject(post != null ? post.getSubject() : null);
+        info.setDescription(post != null ? post.getContent() : null);
+        info.setPrice(post != null ? post.getPrice() : BigDecimal.ZERO);
+
+        // Names & bio
+        info.setLearnerName(
+                learner.getFirstName() + " " + learner.getLastName()
+        );
+        info.setInstructorName(
+                instr.getFirstName() + " " + instr.getLastName()
+        );
+        info.setInstructorBio(instr.getInstructorBio());
+
+        // Sessions count (e.g., all finished sessions for this instructor)
+        long sessionsNumber = sessionDAO
+                .findFinishedSessionByInstructorId(instr.getInstructorId())
+                .size();
+        info.setSessionsNumber(sessionsNumber);
+
+        // Ratings for instructor
+        List<Rating> ratings = ratingDAO.findRatingsByInstructorId(instr.getInstructorId());
+        info.setRatingsNumber((long) ratings.size());
+        if (!ratings.isEmpty()) {
+            BigDecimal avg = ratings.stream()
+                    .map(r -> BigDecimal.valueOf(r.getStars()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .divide(BigDecimal.valueOf(ratings.size()), 2, RoundingMode.HALF_UP);
+            info.setAverageRating(avg);
+        } else {
+            info.setAverageRating(BigDecimal.ZERO);
+        }
+
+        return info;
     }
 
 }

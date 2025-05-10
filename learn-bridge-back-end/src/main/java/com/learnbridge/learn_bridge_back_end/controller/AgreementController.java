@@ -1,11 +1,9 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
-import com.learnbridge.learn_bridge_back_end.dto.AgreementRequestDTO;
-import com.learnbridge.learn_bridge_back_end.dto.AgreementResponseDTO;
-import com.learnbridge.learn_bridge_back_end.dto.NotificationDTO;
-import com.learnbridge.learn_bridge_back_end.dto.SessionDTO;
+import com.learnbridge.learn_bridge_back_end.dto.*;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
+import com.learnbridge.learn_bridge_back_end.service.AgreementService;
 import com.learnbridge.learn_bridge_back_end.service.AgreementWorkflowService;
 import com.learnbridge.learn_bridge_back_end.service.NotificationService;
 import com.learnbridge.learn_bridge_back_end.service.NotificationService;
@@ -27,6 +25,9 @@ public class AgreementController {
 
     @Autowired
     private NotificationService notificationsService;
+
+    @Autowired
+    private AgreementService agreementService;
 
 
     @PostMapping("/request/{learnerId}/{postId}")
@@ -84,5 +85,12 @@ public class AgreementController {
             @PathVariable Long notificationId) {
         agreementWorkflowService.rejectLearnerRequest(notificationId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{notificationId}/info")
+    public ResponseEntity<AskForAgreementInfo> getAgreementInfo(
+            @PathVariable Long notificationId) {
+        AskForAgreementInfo info = agreementService.getAskForAgreementInfo(notificationId);
+        return ResponseEntity.ok(info);
     }
 }
