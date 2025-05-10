@@ -25,7 +25,14 @@ public class CustomUserDetailService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
+        return new SecurityUser(user);
+    }
 
+    public UserDetails loadUserById(Long userId) {
+        User user = userDAO.findUserById(userId);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with ID: " + userId);
+        }
         return new SecurityUser(user);
     }
 }

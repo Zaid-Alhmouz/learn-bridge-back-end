@@ -10,12 +10,14 @@ import java.time.YearMonth;
 @Table(name = "card")
 public class Card {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "card_id")
     private Long cardId;
 
-    @Column(name = "card_number", nullable = false, unique = true, length = 16)
+
+    @Column(name = "card_number", nullable = false, length = 19)
     private String cardNumber;
 
     @Column(name = "expire_date", nullable = false)
@@ -33,10 +35,11 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name =  "default_card")
+    @Column(name = "default_card")
     private boolean defaultCard;
 
-    @Column(name="stripe_pm_id")
+
+    @Column(name = "stripe_pm_id", nullable = false, unique = true, length = 255)
     private String stripePaymentMethodId;
 
 

@@ -1,8 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.entity;
 
-
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -29,7 +27,6 @@ public class PaymentInfo {
     @Column(name = "amount", nullable = false, precision = 6, scale = 2)
     private BigDecimal amount;
 
-
     @Column(name = "stripe_payment_intent_id")
     private String stripePaymentIntentId;
 
@@ -39,22 +36,26 @@ public class PaymentInfo {
     @Column(name = "stripe_refund_id")
     private String stripeRefundId;
 
+
+    @Column(name = "stripe_transfer_id")
+    private String stripeTransferId;
+
+
     @Column(name = "captured", nullable = false)
     private Boolean captured = false;
 
     @Column(name = "refunded", nullable = false)
     private Boolean refunded = false;
 
+    // Getters and setters
+
     public Long getPaymentId() {
         return transactionId;
     }
 
-
-
     public User getUser() {
         return user;
     }
-
     public void setUser(User user) {
         this.user = user;
     }
@@ -62,7 +63,6 @@ public class PaymentInfo {
     public Card getCard() {
         return card;
     }
-
     public void setCard(Card card) {
         this.card = card;
     }
@@ -70,7 +70,6 @@ public class PaymentInfo {
     public LocalDate getPaymentDate() {
         return paymentDate;
     }
-
     public void setPaymentDate(LocalDate paymentDate) {
         this.paymentDate = paymentDate;
     }
@@ -78,7 +77,6 @@ public class PaymentInfo {
     public BigDecimal getAmount() {
         return amount;
     }
-
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
@@ -86,7 +84,6 @@ public class PaymentInfo {
     public String getStripePaymentIntentId() {
         return stripePaymentIntentId;
     }
-
     public void setStripePaymentIntentId(String stripePaymentIntentId) {
         this.stripePaymentIntentId = stripePaymentIntentId;
     }
@@ -94,7 +91,6 @@ public class PaymentInfo {
     public String getStripeChargeId() {
         return stripeChargeId;
     }
-
     public void setStripeChargeId(String stripeChargeId) {
         this.stripeChargeId = stripeChargeId;
     }
@@ -102,15 +98,20 @@ public class PaymentInfo {
     public String getStripeRefundId() {
         return stripeRefundId;
     }
-
     public void setStripeRefundId(String stripeRefundId) {
         this.stripeRefundId = stripeRefundId;
+    }
+
+    public String getStripeTransferId() {
+        return stripeTransferId;
+    }
+    public void setStripeTransferId(String stripeTransferId) {
+        this.stripeTransferId = stripeTransferId;
     }
 
     public Boolean getCaptured() {
         return captured;
     }
-
     public void setCaptured(Boolean captured) {
         this.captured = captured;
     }
@@ -118,7 +119,6 @@ public class PaymentInfo {
     public Boolean getRefunded() {
         return refunded;
     }
-
     public void setRefunded(Boolean refunded) {
         this.refunded = refunded;
     }
@@ -134,6 +134,7 @@ public class PaymentInfo {
                 ", stripePaymentIntentId='" + stripePaymentIntentId + '\'' +
                 ", stripeChargeId='" + stripeChargeId + '\'' +
                 ", stripeRefundId='" + stripeRefundId + '\'' +
+                ", stripeTransferId='" + stripeTransferId + '\'' +
                 ", captured=" + captured +
                 ", refunded=" + refunded +
                 '}';

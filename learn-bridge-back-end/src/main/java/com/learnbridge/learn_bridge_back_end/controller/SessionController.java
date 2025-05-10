@@ -6,6 +6,7 @@ import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.SessionService;
 import com.learnbridge.learn_bridge_back_end.util.SessionMapper;
+import com.stripe.exception.StripeException;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ public class SessionController {
 
     @Autowired
     UserDAO userDAO;
+
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<SessionDTO> getSessionById(@PathVariable Long sessionId) {
@@ -61,7 +63,7 @@ public class SessionController {
 
     // change session status from 'ONGOING' to 'FINISHED'
     @PutMapping("/cancel-session/{sessionId}")
-    public ResponseEntity<SessionDTO> cancelSession(@AuthenticationPrincipal SecurityUser loggedUser, @PathVariable Long sessionId) {
+    public ResponseEntity<SessionDTO> cancelSession(@AuthenticationPrincipal SecurityUser loggedUser, @PathVariable Long sessionId) throws StripeException {
 
         Long cancelledById = loggedUser.getUser().getId();
         SessionDTO cancelledSession = sessionService.cancelSession(sessionId, cancelledById);
@@ -75,7 +77,7 @@ public class SessionController {
 
     // change the sessions status from ongoing to 'FINISHED'
     @PutMapping("/finish-session/{sessionId}")
-    public ResponseEntity<SessionDTO> finishSession(@PathVariable Long sessionId, @AuthenticationPrincipal SecurityUser loggedUser) {
+    public ResponseEntity<SessionDTO> finishSession(@PathVariable Long sessionId, @AuthenticationPrincipal SecurityUser loggedUser) throws StripeException {
 
         Long cancelledById = loggedUser.getUser().getId();
         SessionDTO cancelledSession = sessionService.finishSession(sessionId, cancelledById);
