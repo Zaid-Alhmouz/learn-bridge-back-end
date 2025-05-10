@@ -5,6 +5,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.param.*;
 import com.stripe.param.PaymentMethodCreateParams.CardDetails;
+import com.stripe.service.CustomerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -132,4 +133,58 @@ public class StripeService {
         }
         return Refund.create(builder.build());
     }
+
+    /**
+     * Update the customer to use the given PM as their default for invoices/subscriptions.
+     */
+    public Customer updateCustomerDefaultPaymentMethod(String customerId, String pmId) throws StripeException {
+        // retrieve instance, then call instance.update(...)
+        Customer customer = Customer.retrieve(customerId);
+        CustomerUpdateParams params = CustomerUpdateParams.builder()
+                .setInvoiceSettings(
+                        CustomerUpdateParams.InvoiceSettings.builder()
+                                .setDefaultPaymentMethod(pmId)
+                                .build()
+                )
+                .build();
+        return customer.update(params);
+    }
+
+
+    /**
+     * List all card-type PaymentMethods for a given customer.
+     */
+    public List<PaymentMethod> listCustomerPaymentMethods(String customerId,
+                                                          PaymentMethodListParams.Type type)
+            throws StripeException {
+        return PaymentMethod.list(
+                PaymentMethodListParams.builder()
+                        .setCustomer(customerId)
+                        .setType(type)
+                        .build()
+        ).getData();
+    }
+
+    /**
+     * Detach a PaymentMethod from any customer, cleaning up orphaned PMs.
+     */
+    public void detachPaymentMethod(String paymentMethodId) throws StripeException {
+        PaymentMethod pm = PaymentMethod.retrieve(paymentMethodId);
+        pm.detach(PaymentMethodDetachParams.builder().build());
+    }
+
+    public PaymentMethod attachPaymentMethodToCustomer(String customerId, String pmId) throws StripeException {
+        return PaymentMethod.retrieve(pmId)
+                .attach(PaymentMethodAttachParams.builder()
+                        .setCustomer(customerId)
+                        .build());
+    }
+
+    /**
+     * Retrieve a PM without attaching.
+     */
+    public PaymentMethod retrievePaymentMethod(String pmId) throws StripeException {
+        return PaymentMethod.retrieve(pmId);
+    }
+
 }

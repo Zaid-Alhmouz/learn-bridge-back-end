@@ -7,6 +7,7 @@ import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.YearMonth;
 import java.util.List;
 
 @Repository
@@ -95,5 +96,31 @@ public class CardDAOImpl implements CardDAO {
         query.setParameter("userId", userId);
         Card card = query.getSingleResult();
         return card;
+    }
+
+    @Override
+    public Card findByUserIdAndLast4AndExpireDate(Long userId, String last4, YearMonth expireDate) {
+        String jpql = "FROM Card c WHERE c.user.userId = :userId " +
+                "AND c.cardNumber LIKE :mask " +
+                "AND c.expireDate = :expiry";
+        TypedQuery<Card> q = entityManager.createQuery(jpql, Card.class);
+        q.setParameter("userId", userId);
+        // cardNumber is stored as "xxxxxxxxxxxx1234"
+        q.setParameter("mask", "%" + last4);
+        q.setParameter("expiry", expireDate);
+        List<Card> results = q.getResultList();
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Override
+    public Card findByStripePaymentMethodId(String stripePmId, Long userId) {
+        String jpql = "FROM Card c " +
+                "WHERE c.stripePaymentMethodId = :pmId " +
+                "  AND c.user.userId = :userId";
+        TypedQuery<Card> query = entityManager.createQuery(jpql, Card.class);
+        query.setParameter("pmId", stripePmId);
+        query.setParameter("userId", userId);
+        List<Card> results = query.getResultList();
+        return results.isEmpty() ? null : results.get(0);
     }
 }
