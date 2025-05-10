@@ -19,6 +19,7 @@ public class CardController {
 
     @Autowired
     private CardService cardService;
+    // New Auth Here...
     @PreAuthorize("hasAnyRole('INSTRUCTOR', 'LEARNER')")
     @PostMapping("/add")
     public ResponseEntity<?> addCard(@RequestBody AddCardRequest cardRequest, @AuthenticationPrincipal SecurityUser loggedUser) {
