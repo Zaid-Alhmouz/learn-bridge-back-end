@@ -91,19 +91,31 @@ public class StripeService {
         return paymentMethod;
     }
 
-    public PaymentIntent authorizePayment(long amountCents, String currency, String customerId, String paymentMethodId)
+    public PaymentIntent authorizePayment(long amountCents,
+                                          String currency,
+                                          String customerId,
+                                          String paymentMethodId)
             throws StripeException {
-        return PaymentIntent.create(
-                PaymentIntentCreateParams.builder()
-                        .setAmount(amountCents)
-                        .setCurrency(currency)
-                        .setCustomer(customerId)
-                        .setPaymentMethod(paymentMethodId)
-                        .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
-                        .setConfirm(true)
-                        .build()
-        );
+        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                .setAmount(amountCents)
+                .setCurrency(currency)
+                .setCustomer(customerId)
+                .setPaymentMethod(paymentMethodId)
+                .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
+                .setConfirm(true)
+                .setAutomaticPaymentMethods(
+                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                .setEnabled(true)
+                                .setAllowRedirects(
+                                        PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER
+                                )
+                                .build()
+                )
+                .build();
+
+        return PaymentIntent.create(params);
     }
+
 
     public PaymentIntent capturePayment(String paymentIntentId) throws StripeException {
         PaymentIntent pi = PaymentIntent.retrieve(paymentIntentId);

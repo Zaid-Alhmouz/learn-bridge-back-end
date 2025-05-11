@@ -74,19 +74,23 @@ public class SessionService {
         chat.setMessages(new HashSet<>());
         chatDAO.saveChat(chat);
 
-        // Add participants
-        SessionParticipants learnerPart = new SessionParticipants(saved.getSessionId(), agreement.getLearner().getLearnerId());
+        // Add only the learner as a participant
+        SessionParticipants learnerPart = new SessionParticipants(
+                saved.getSessionId(),
+                agreement.getLearner().getLearnerId()
+        );
         participantsDAO.saveSessionParticipant(learnerPart);
-        SessionParticipants instructorPart = new SessionParticipants(saved.getSessionId(), agreement.getInstructor().getInstructorId());
-        participantsDAO.saveSessionParticipant(instructorPart);
 
         // Notify learner of hold
         notificationService.sendHoldNotification(
-                agreement.getLearner().getUser(), agreement.getPrice(), pi.getId()
+                agreement.getLearner().getUser(),
+                agreement.getPrice(),
+                pi.getId()
         );
 
         return SessionMapper.toSessionDTO(saved);
     }
+
 
     /**
      * Captures authorized funds, transfers to instructor, and marks session finished
