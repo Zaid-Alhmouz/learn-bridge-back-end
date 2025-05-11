@@ -15,8 +15,8 @@ public interface CardDAO {
     Card findCardByUserId(Long userId);
     List<Card> findAllCardsByUserId(Long userId);
     Card findCardByCardNumber(String cardNumber);
-    public Card findDefaultCard();
-    public Card findDefaultCardByUserId(Long userId);
+    Card findDefaultCard();
+    Card findDefaultCardByUserId(Long userId);
     Card findByUserIdAndLast4AndExpireDate(Long userId, String last4, YearMonth expireDate);
     Card findByStripePaymentMethodId(String stripePmId, Long userId);
 }

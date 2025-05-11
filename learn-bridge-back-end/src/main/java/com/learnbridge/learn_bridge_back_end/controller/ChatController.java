@@ -1,15 +1,19 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
+import com.learnbridge.learn_bridge_back_end.dto.ChatSummaryDTO;
 import com.learnbridge.learn_bridge_back_end.dto.MessageDTO;
 import com.learnbridge.learn_bridge_back_end.entity.User;
+import com.learnbridge.learn_bridge_back_end.entity.UserRole;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -67,6 +71,22 @@ public class ChatController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(messages, HttpStatus.OK);
+    }
+
+    @GetMapping("/my-chats")
+    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'LEARNER')")
+    public ResponseEntity<List<ChatSummaryDTO>> getMyChats(
+            @AuthenticationPrincipal SecurityUser loggedUser) {
+        try {
+            Long userId = loggedUser.getUser().getId();
+            UserRole role = loggedUser.getUser().getUserRole();
+
+            List<ChatSummaryDTO> chats = chatService.getAllChatsForUser(userId, role);
+            return ResponseEntity.ok(chats != null ? chats : Collections.emptyList());
+        } catch (Exception e) {
+            // on any unexpected error, return empty list rather than 500
+            return ResponseEntity.ok(Collections.emptyList());
+        }
     }
 
 }

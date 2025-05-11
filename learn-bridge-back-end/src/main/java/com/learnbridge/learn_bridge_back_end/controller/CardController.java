@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.controller;
 
 import com.learnbridge.learn_bridge_back_end.dto.AddCardRequest;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardResponse;
+import com.learnbridge.learn_bridge_back_end.dto.HasCardResponse;
 import com.learnbridge.learn_bridge_back_end.entity.Card;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.CardService;
@@ -55,5 +56,13 @@ public class CardController {
             return ResponseEntity.badRequest().body("Unable to set default card.");
         }
         return ResponseEntity.ok(editedCard);
+    }
+
+    // check if user has card or not
+    @GetMapping("/has-card")
+    public ResponseEntity<HasCardResponse> hasCard(@AuthenticationPrincipal SecurityUser loggedUser) {
+        Long userId = loggedUser.getUser().getId();
+        boolean hasCard = cardService.userHasCard(userId);
+        return ResponseEntity.ok(new HasCardResponse(hasCard));
     }
 }

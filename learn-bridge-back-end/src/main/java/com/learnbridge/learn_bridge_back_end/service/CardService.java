@@ -183,4 +183,10 @@ public class CardService {
     }
 
 
+    // check if user has card or not
+    @Transactional(readOnly = true)
+    public boolean userHasCard(Long userId) {
+        List<Card> cards = cardDAO.findAllCardsByUserId(userId);
+        return cards != null && !cards.isEmpty();
+    }
 }

@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.dao;
 
 import com.learnbridge.learn_bridge_back_end.entity.Card;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
@@ -90,13 +91,17 @@ public class CardDAOImpl implements CardDAO {
 
     @Override
     public Card findDefaultCardByUserId(Long userId) {
-        String sql = "from Card c where c.user.userId = :userId AND c.defaultCard = :isDefault";
-        TypedQuery<Card> query = entityManager.createQuery(sql, Card.class);
-        query.setParameter("isDefault", true);
-        query.setParameter("userId", userId);
-        Card card = query.getSingleResult();
-        return card;
+        try {
+            return entityManager.createQuery(
+                            "FROM Card c WHERE c.user.userId = :userId AND c.defaultCard = true",
+                            Card.class)
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;  
+        }
     }
+
 
     @Override
     public Card findByUserIdAndLast4AndExpireDate(Long userId, String last4, YearMonth expireDate) {
