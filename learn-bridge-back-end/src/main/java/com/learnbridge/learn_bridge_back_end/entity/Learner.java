@@ -2,6 +2,8 @@ package com.learnbridge.learn_bridge_back_end.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Arrays;
+
 @Entity
 @Table(name = "learner")
 public class Learner {
@@ -26,6 +28,9 @@ public class Learner {
 
     @Column(name = "personal_image")
     private byte[] personalImage;
+
+    @Column(name = "stripe_account_id", length = 255, unique = true)
+    private String stripeAccountId;
 
     public Long getLearnerId() {
         return learnerId;
@@ -72,6 +77,15 @@ public class Learner {
         this.personalImage = personalImage;
     }
 
+
+    public String getStripeAccountId() {
+        return stripeAccountId;
+    }
+
+    public void setStripeAccountId(String stripeAccountId) {
+        this.stripeAccountId = stripeAccountId;
+    }
+
     @Override
     public String toString() {
         return "Learner{" +
@@ -80,6 +94,8 @@ public class Learner {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", favouriteCategory='" + favouriteCategory + '\'' +
+                ", personalImage=" + Arrays.toString(personalImage) +
+                ", stripeAccountId='" + stripeAccountId + '\'' +
                 '}';
     }
 }

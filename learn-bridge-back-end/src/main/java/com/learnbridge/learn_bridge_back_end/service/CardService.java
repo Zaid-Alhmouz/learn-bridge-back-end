@@ -1,20 +1,22 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
 import com.learnbridge.learn_bridge_back_end.dao.CardDAO;
+import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
 import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardRequest;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardResponse;
-import com.learnbridge.learn_bridge_back_end.entity.Card;
-import com.learnbridge.learn_bridge_back_end.entity.CardType;
-import com.learnbridge.learn_bridge_back_end.entity.User;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.CardMapper;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Account;
 import com.stripe.model.Customer;
 import com.stripe.model.PaymentMethod;
+import com.stripe.param.AccountCreateParams;
 import com.stripe.param.PaymentMethodListParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.YearMonth;
 import java.util.List;
@@ -33,6 +35,11 @@ public class CardService {
     @Autowired
     private StripeService stripeService;
 
+
+    @Autowired
+    private InstructorDAO instructorDAO;
+
+
     /**
      * Adds a new payment card for a user.
      * Supports both secure tokenized approach (paymentMethodId) and raw card details.
@@ -45,85 +52,100 @@ public class CardService {
             throw new IllegalArgumentException("User not found: " + userId);
         }
 
-        // 1) Ensure Stripe customer exists
+        // 1) Ensure Stripe Customer exists (for paying)
         Customer customer = stripeService.getOrCreateCustomer(user.getEmail());
         if (!customer.getId().equals(user.getStripeCustomerId())) {
             user.setStripeCustomerId(customer.getId());
             userDAO.updateUser(user);
         }
 
-        // 2) List existing PMs for this customer
+        // 1a) If INSTRUCTOR and no Connect account yet, create Express Connect account
+        if (user.getUserRole() == UserRole.INSTRUCTOR) {
+            Instructor instructor = instructorDAO.findInstructorById(user.getId());
+            if (instructor.getStripeAccountId() == null) {
+                AccountCreateParams acctParams = AccountCreateParams.builder()
+                        .setType(AccountCreateParams.Type.EXPRESS)
+                        .setCountry("US")  // or use a @Value-injected property
+                        .setEmail(user.getEmail())
+                        .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
+                        .setCapabilities(
+                                AccountCreateParams.Capabilities.builder()
+                                        .setCardPayments(
+                                                AccountCreateParams.Capabilities.CardPayments.builder()
+                                                        .setRequested(true)
+                                                        .build()
+                                        )
+                                        .setTransfers(
+                                                AccountCreateParams.Capabilities.Transfers.builder()
+                                                        .setRequested(true)
+                                                        .build()
+                                        )
+                                        .build()
+                        )
+                        .build();
+
+                Account acct = Account.create(acctParams);
+                instructor.setStripeAccountId(acct.getId());
+                instructorDAO.updateInstructor(instructor);
+            }
+        }
+
+        // 2) List existing PaymentMethods on the Customer
         List<PaymentMethod> existingPMs = stripeService.listCustomerPaymentMethods(
                 customer.getId(),
                 PaymentMethodListParams.Type.CARD
         );
 
-        // 3) Derive candidate last-4 and expiry BEFORE any attach/create
+        // 3) Compute candidate last4 + expiry BEFORE attach/create
         String candidateLast4;
         YearMonth candidateExpiry;
-
-        if (request.getPaymentMethodId() != null && !request.getPaymentMethodId().isEmpty()) {
-            // Token branch: fetch it first (without attaching) to read its details
+        if (StringUtils.hasText(request.getPaymentMethodId())) {
             PaymentMethod incoming = stripeService.retrievePaymentMethod(request.getPaymentMethodId());
-            candidateLast4     = incoming.getCard().getLast4();
-            candidateExpiry    = YearMonth.of(
+            candidateLast4 = incoming.getCard().getLast4();
+            candidateExpiry = YearMonth.of(
                     incoming.getCard().getExpYear().intValue(),
                     incoming.getCard().getExpMonth().intValue()
             );
         } else {
-            // Raw-card branch: pull from the DTO
-            String raw = request.getCardNumber().replaceAll("\\s+","");
-            candidateLast4  = raw.substring(raw.length() - 4);
+            String raw = request.getCardNumber().replaceAll("\\s+", "");
+            candidateLast4 = raw.substring(raw.length() - 4);
             candidateExpiry = request.getExpireDate();
         }
 
-        // 4) Pre-check duplicates against existingPMs
+        // 4) Prevent duplicate cards
         for (PaymentMethod pm : existingPMs) {
-            String last4 = pm.getCard().getLast4();
             YearMonth exp = YearMonth.of(
                     pm.getCard().getExpYear().intValue(),
                     pm.getCard().getExpMonth().intValue()
             );
-            if (last4.equals(candidateLast4) && exp.equals(candidateExpiry)) {
+            if (pm.getCard().getLast4().equals(candidateLast4) && exp.equals(candidateExpiry)) {
                 throw new IllegalArgumentException(
-                        "You’ve already added this card (ending in " +
-                                last4 + ", exp " + exp + ")."
+                        "You’ve already added this card (ending in " + candidateLast4 +
+                                ", exp " + candidateExpiry + ")."
                 );
             }
         }
 
-        // 5) Create or attach now that we know it’s not a duplicate
-        PaymentMethod pm;
-        if (request.getPaymentMethodId() != null && !request.getPaymentMethodId().isEmpty()) {
-            // attach the existing PM
-            pm = stripeService.attachPaymentMethodToCustomer(
-                    customer.getId(), request.getPaymentMethodId()
-            );
-        } else {
-            // create & attach raw-card PM
-            YearMonth exp = request.getExpireDate();
-            pm = stripeService.createAndAttachCard(
-                    customer.getId(),
-                    request.getCardNumber(),
-                    String.valueOf(exp.getMonthValue()),
-                    String.valueOf(exp.getYear()),
-                    request.getCvc()
-            );
-        }
-
-        // 6) Make it default in Stripe
-        stripeService.updateCustomerDefaultPaymentMethod(
+        // 5) Attach or create the new PaymentMethod
+        PaymentMethod pm = StringUtils.hasText(request.getPaymentMethodId())
+                ? stripeService.attachPaymentMethodToCustomer(customer.getId(), request.getPaymentMethodId())
+                : stripeService.createAndAttachCard(
                 customer.getId(),
-                pm.getId()
+                request.getCardNumber(),
+                String.valueOf(request.getExpireDate().getMonthValue()),
+                String.valueOf(request.getExpireDate().getYear()),
+                request.getCvc()
         );
 
-        // 7) Persist in our DB
+        // 6) Make it the default PaymentMethod on Stripe
+        stripeService.updateCustomerDefaultPaymentMethod(customer.getId(), pm.getId());
+
+        // 7) Persist card details in your DB
         String last4 = pm.getCard().getLast4();
         YearMonth expiry = YearMonth.of(
                 pm.getCard().getExpYear().intValue(),
                 pm.getCard().getExpMonth().intValue()
         );
-
         Card card = new Card();
         card.setUser(user);
         card.setStripePaymentMethodId(pm.getId());
@@ -132,24 +154,22 @@ public class CardService {
         card.setCardNumber("xxxxxxxxxxxx" + last4);
         card.setCardType(CardType.fromStripeBrand(pm.getCard().getBrand()));
 
-        // Local default-flag logic
         List<Card> existingCards = cardDAO.findAllCardsByUserId(userId);
         boolean makeDefault = existingCards.isEmpty() || request.isDefault();
         if (makeDefault) {
-            for (Card old : existingCards) {
-                if (old.isDefaultCard()) {
-                    old.setDefaultCard(false);
-                    cardDAO.updateCard(old);
-                }
-            }
+            existingCards.stream()
+                    .filter(Card::isDefaultCard)
+                    .forEach(old -> {
+                        old.setDefaultCard(false);
+                        cardDAO.updateCard(old);
+                    });
             card.setDefaultCard(true);
         } else {
             card.setDefaultCard(false);
         }
-
         cardDAO.saveCard(card);
 
-        // 8) Build response
+        // 8) Build and return response
         AddCardResponse resp = new AddCardResponse();
         resp.setId(card.getCardId());
         resp.setLast4(last4);
@@ -157,6 +177,9 @@ public class CardService {
         resp.setDefault(card.isDefaultCard());
         return resp;
     }
+
+
+
 
 
 

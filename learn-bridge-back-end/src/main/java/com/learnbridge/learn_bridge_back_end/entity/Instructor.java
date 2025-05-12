@@ -39,6 +39,9 @@ public class Instructor {
     @Column(name = "favourite_category")
     private String favouriteCategory;
 
+    @Column(name = "stripe_account_id", length = 255, unique = true)
+    private String stripeAccountId;
+
     public Long getInstructorId() {
         return instructorId;
     }
@@ -108,6 +111,13 @@ public class Instructor {
         this.favouriteCategory = favouriteCategory;
     }
 
+
+    public String getStripeAccountId() { return stripeAccountId; }
+    public void setStripeAccountId(String stripeAccountId) {
+        this.stripeAccountId = stripeAccountId;
+    }
+
+
     @Override
     public String toString() {
         return "Instructor{" +
@@ -120,6 +130,7 @@ public class Instructor {
                 ", universityInfo='" + universityInfo + '\'' +
                 ", instructorImage=" + Arrays.toString(instructorImage) +
                 ", favouriteCategory='" + favouriteCategory + '\'' +
+                ", stripeAccountId='" + stripeAccountId + '\'' +
                 '}';
     }
 }

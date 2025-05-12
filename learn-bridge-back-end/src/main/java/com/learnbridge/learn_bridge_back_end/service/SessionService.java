@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,48 +98,65 @@ public class SessionService {
      */
     @Transactional
     public SessionDTO finishSession(Long sessionId, Long finisherId) throws StripeException {
+        // 1. Load session
         Session session = sessionDAO.findSessionById(sessionId);
         if (session == null) {
             throw new IllegalArgumentException("Session not found: " + sessionId);
         }
 
+        // 2. Capture the authorized payment
         PaymentInfo info = session.getTransaction();
-
-        // Capture the payment
         PaymentIntent captured = stripeService.capturePayment(info.getStripePaymentIntentId());
         info.setCaptured(true);
 
-        // Retrieve the latest charge ID from the PaymentIntent
+        // 3. Retrieve and save the latest Charge ID
         String latestChargeId = captured.getLatestCharge();
         if (latestChargeId != null) {
-            // Retrieve the Charge object using the latest charge ID
             Charge charge = Charge.retrieve(latestChargeId);
             info.setStripeChargeId(charge.getId());
         } else {
-            // Handle the case where there is no associated charge
             throw new IllegalStateException("No charge associated with the PaymentIntent.");
         }
 
-        // Transfer funds to the instructor
+        // 4. Transfer funds to the instructor’s CONNECT account (mock in test mode)
         long amountCents = info.getAmount().multiply(new BigDecimal(100)).longValue();
-        String instructorAccount = session.getAgreement().getInstructor().getUser().getStripeCustomerId();
-        Transfer transfer = stripeService.transferToInstructor(amountCents, "usd", instructorAccount);
-        info.setStripeTransferId(transfer.getId());
+        String transferId;
+        if (stripeService.isTestMode()) {
+            // Mock Transfer ID in test/demo mode
+            transferId = "test_xfer_" + UUID.randomUUID();
+        } else {
+            // Real transfer in live mode
+            String instructorAccount = session
+                    .getAgreement()
+                    .getInstructor()
+                    .getStripeAccountId();
+            Transfer transfer = stripeService.transferToInstructor(
+                    amountCents,
+                    "usd",
+                    instructorAccount
+            );
+            transferId = transfer.getId();
+        }
+        info.setStripeTransferId(transferId);
 
+        // 5. Persist the updated payment info
         paymentInfoDAO.updatePaymentInfo(info);
 
-        // Update session status
+        // 6. Mark session as finished
         session.setSessionStatus(SessionStatus.FINISHED);
         session.setFinishedById(finisherId);
         Session updated = sessionDAO.updateSession(session);
 
-        // Notify instructor of the transfer
+        // 7. Notify instructor of the (mock) transfer
         notificationService.sendTransferNotification(
-                session.getInstructor(), info.getAmount(), info.getStripeChargeId()
+                session.getInstructor(),
+                info.getAmount(),
+                info.getStripeChargeId()
         );
 
         return convertToDTO(updated);
     }
+
 
     /**
      * Cancels session and releases hold

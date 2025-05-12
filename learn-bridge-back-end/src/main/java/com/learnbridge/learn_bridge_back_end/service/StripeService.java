@@ -14,8 +14,19 @@ import java.util.List;
 @Service
 public class StripeService {
 
-    public StripeService(@Value("${stripe.api.key}") String apiKey) {
+
+    private final boolean testMode;
+
+    public StripeService(
+            @Value("${stripe.api.key}") String apiKey,
+            @Value("${stripe.test-mode:true}") boolean testMode
+    ) {
         Stripe.apiKey = apiKey;
+        this.testMode = testMode;
+    }
+
+    public boolean isTestMode() {
+        return testMode;
     }
 
 
