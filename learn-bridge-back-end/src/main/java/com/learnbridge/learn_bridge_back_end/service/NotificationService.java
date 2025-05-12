@@ -255,6 +255,14 @@ public class NotificationService {
     }
 
 
+    public NotificationDTO deleteNotificationById(Long notificationId) {
+        Notifications notification = notificationsDAO.findNotificationById(notificationId);
+        if(notification == null) {
+            throw new RuntimeException("Notification with id " + notificationId + " not found");
+        }
+        notificationsDAO.deleteNotification(notificationId);
+        return toDTO(notification);
+    }
 
     /**
      * Convert entity to DTO

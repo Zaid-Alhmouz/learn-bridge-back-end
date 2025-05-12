@@ -111,6 +111,7 @@ public class AgreementWorkflowService {
         // notify the learner that you’ve accepted their request
         notificationsService.createLearnerRequestAcceptedNotification(ag);
 
+        notificationsDAO.deleteNotification(notificationId);
         // go straight to session creation
         return sessionService.createSessionFromLearnerAgreement(ag.getAgreementId());
     }
