@@ -132,7 +132,8 @@ public class ChatService {
                 result.add(new ChatSummaryDTO(
                         chat.getChatId(),
                         session.getSessionId(),
-                        otherName
+                        otherName,
+                        session.getSessionStatus()
                 ));
             }
         }

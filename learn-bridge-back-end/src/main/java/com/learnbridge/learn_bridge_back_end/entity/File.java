@@ -32,7 +32,8 @@ public class File {
     private Long fileSize;
 
     @Lob
-    @Column(name = "file_data", nullable = false, columnDefinition = "LONGBLOB")
+    @Basic(fetch = FetchType.LAZY)
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] fileData;
 
     @Column(name = "uploaded_at")

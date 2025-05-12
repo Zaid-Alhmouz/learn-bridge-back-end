@@ -12,7 +12,7 @@ public class FileMapper {
         return new FileDTO(file);
     }
 
-    public static List<FileDTO> toFileDTO(List<File> files) {
+    public static List<FileDTO> toFileList(List<File> files) {
         return files.stream().map(FileMapper::toFileDTO).collect(Collectors.toList());
     }
 }

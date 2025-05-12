@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FileService {
@@ -54,6 +56,21 @@ public class FileService {
         catch (IOException e)
         {
             throw new RuntimeException("upload file error");
+        }
+    }
+
+    // get all files for specific chat
+    public List<FileDTO> getAllFilesForChat(Long chatId) {
+
+        List<File> files = fileDAO.findFilesByChatId(chatId);
+
+        if (files == null)
+        {
+            return new ArrayList<>();
+        }
+
+        else{
+            return FileMapper.toFileList(files);
         }
     }
 }

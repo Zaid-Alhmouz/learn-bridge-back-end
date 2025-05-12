@@ -178,7 +178,7 @@ public class NotificationService {
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
-                "A hold of $%s has been placed on your card (PaymentIntent: %s).", amount, paymentIntentId
+                "A hold of %sJOD has been placed on your card.", amount
         ));
         return notificationsDAO.saveNotification(notification);
     }
@@ -191,7 +191,7 @@ public class NotificationService {
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
-                "$%s has been transferred to your account (Charge: %s).", amount, chargeId
+                "$%s has been transferred to your account.", amount
         ));
         return notificationsDAO.saveNotification(notification);
     }
@@ -204,7 +204,7 @@ public class NotificationService {
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
-                "$%s has been refunded to your card (Refund: %s).", amount, refundId
+                "%sJOD has been refunded to your card.", amount
         ));
         return notificationsDAO.saveNotification(notification);
     }
@@ -217,7 +217,7 @@ public class NotificationService {
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
-                "Your payment hold of $%s (PaymentIntent: %s) has been released.", amount, paymentIntentId
+                "Your payment hold of %sJOD has been released.", amount
         ));
         return notificationsDAO.saveNotification(notification);
     }
