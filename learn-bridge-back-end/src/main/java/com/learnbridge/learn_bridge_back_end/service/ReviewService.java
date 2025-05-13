@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.service;
 
 import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.ReviewDTO;
+import com.learnbridge.learn_bridge_back_end.dto.ReviewSummaryDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.ReviewMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
@@ -96,5 +98,20 @@ public class ReviewService {
         }
 
         return ReviewMapper.toDTOList(instructorRatings);
+    }
+
+    /**
+     * Returns a list of ReviewSummaryDTO for all reviews received by the given instructor.
+     */
+    public List<ReviewSummaryDTO> getReviewsByInstructor(Long instructorId) {
+        List<Rating> ratings = ratingDAO.findRatingsByInstructorId(instructorId);
+
+        return ratings.stream()
+                .map(r -> new ReviewSummaryDTO(
+                        r.getLearner().getUser().getFirstName() + " " + r.getLearner().getUser().getLastName(),
+                        r.getStars(),
+                        r.getDescription()
+                ))
+                .collect(Collectors.toList());
     }
 }

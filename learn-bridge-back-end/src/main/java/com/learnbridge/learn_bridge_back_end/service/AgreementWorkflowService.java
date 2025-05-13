@@ -64,6 +64,7 @@ public class AgreementWorkflowService {
             throw new RuntimeException("No agreement found for notification: " + notificationId);
         }
 
+        notificationsDAO.deleteNotification(notificationId);
         // create a notification for the instructor that the agreement was accepted
         notificationsService.createAgreementAcceptedNotification(agreement);
 
@@ -91,6 +92,7 @@ public class AgreementWorkflowService {
         }
         Agreement agreement = notice.getAgreement();
 
+        notificationsDAO.deleteNotification(notificationId);
         notificationsService.createAgreementRejectedNotification(agreement);
 
     }
@@ -126,6 +128,8 @@ public class AgreementWorkflowService {
             throw new RuntimeException("Notification or agreement not found: " + notificationId);
         }
         Agreement ag = note.getAgreement();
+
+        notificationsDAO.deleteNotification(notificationId);
 
         // notify the learner that you’ve declined
         notificationsService.createLearnerRequestRejectedNotification(ag);

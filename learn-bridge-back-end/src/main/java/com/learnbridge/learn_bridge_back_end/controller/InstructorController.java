@@ -1,9 +1,11 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
 import com.learnbridge.learn_bridge_back_end.dto.InstructorDTO;
-import com.learnbridge.learn_bridge_back_end.entity.Instructor;
+import com.learnbridge.learn_bridge_back_end.dto.ReviewSummaryDTO;
+import com.learnbridge.learn_bridge_back_end.repository.InstructorStatsRepository;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.FindInstructorService;
+import com.learnbridge.learn_bridge_back_end.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +17,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/instructors")
 @CrossOrigin(origins = "http://localhost:4200")
-public class FindInstructorController {
+public class InstructorController {
 
     @Autowired
     private FindInstructorService findInstructorService;
+
+    @Autowired
+    private InstructorStatsRepository statsRepo;
+
+    @Autowired
+    private ReviewService reviewService;
 
 
     // to retrieve instructors based on learner's favourite category
@@ -54,4 +62,22 @@ public class FindInstructorController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    // retrieve instructor profile info
+    @GetMapping("/profile/{instructorId}")
+    public ResponseEntity<InstructorDTO> getInstructorProfile(@PathVariable Long instructorId) {
+        return statsRepo.findStatsById(instructorId)
+                .map(dto -> ResponseEntity.ok(dto))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+
+    @GetMapping("/view-profile/{instructorId}/reviews")
+    public ResponseEntity<List<ReviewSummaryDTO>> getInstructorReviews(
+            @PathVariable("instructorId") Long instructorId) {
+
+        List<ReviewSummaryDTO> reviews = reviewService.getReviewsByInstructor(instructorId);
+        return ResponseEntity.ok(reviews);
+    }
+
 }
