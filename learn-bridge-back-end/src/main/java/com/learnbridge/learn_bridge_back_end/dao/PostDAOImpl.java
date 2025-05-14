@@ -10,6 +10,7 @@ import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -56,52 +57,72 @@ public class PostDAOImpl implements PostDAO {
     @Override
     public List<Post> findApprovedPosts() {
         String sql = "select p from Post p where p.postStatus = :PostStatus";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.ACCEPTED);
-        return query.getResultList();
+        List<Post> posts = query.getResultList();
+        if (posts.isEmpty()) {
+            return new ArrayList<Post>();
+        }
+        return posts;
     }
 
     @Override
     public List<Post> findApprovedPostsByUserId(Long userId) {
         String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.learnerId = :UserId";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.ACCEPTED);
         query.setParameter("UserId", userId);
+        if (query.getResultList().isEmpty()) {
+            return new ArrayList<>();
+        }
         return query.getResultList();
     }
 
     @Override
     public List<Post> findPendingPostsByUserId(Long userId) {
         String sql = "select p from Post p where p.postStatus = :PostStatus and p.author.learnerId = :UserId";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.PENDING);
         query.setParameter("UserId", userId);
+        if (query.getResultList().isEmpty()) {
+            return new ArrayList<>();
+        }
         return query.getResultList();
     }
 
     @Override
     public List<Post> findAllPostsByUserId(Long userId) {
         String sql = "select p from Post p where p.author.learnerId = :UserId";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("UserId", userId);
+        if (query.getResultList().isEmpty()) {
+            return new ArrayList<>();
+        }
         return query.getResultList();
     }
 
     @Override
     public List<Post> findApprovedPostsByCategory(String category) {
         String sql = "select p from Post p where p.postStatus = :PostStatus and p.category = :category";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.ACCEPTED);
         query.setParameter("category", category);
+        if (query.getResultList().isEmpty()) {
+            return new ArrayList<>();
+        }
         return query.getResultList();
     }
 
     @Override
     public List<Post> findPendingPostsByCategory(String category) {
         String sql = "select p from Post p where p.postStatus = :PostStatus and p.category = :category";
-        Query query = entityManager.createQuery(sql);
+        TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.PENDING);
         query.setParameter("category", category);
+        if (query.getResultList().isEmpty()) {
+            return new ArrayList<>();
+        }
+
         return query.getResultList();
     }
 

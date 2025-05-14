@@ -30,4 +30,16 @@ public class PersonalInfoController {
         }
 
     }
+
+    @GetMapping("/get-personal-info")
+    public ResponseEntity<PersonalInfoDTO> getPersonalInfo(@AuthenticationPrincipal SecurityUser loggedUser) {
+
+        Long userId = loggedUser.getUser().getId();
+        PersonalInfoDTO personalInfoDTO = personalInfoService.getPersonalInfo(userId);
+
+        if(personalInfoDTO == null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(personalInfoDTO, HttpStatus.OK);
+    }
 }

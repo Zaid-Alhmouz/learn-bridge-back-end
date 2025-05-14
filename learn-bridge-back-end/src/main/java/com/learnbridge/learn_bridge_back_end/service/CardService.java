@@ -5,6 +5,7 @@ import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
 import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardRequest;
 import com.learnbridge.learn_bridge_back_end.dto.AddCardResponse;
+import com.learnbridge.learn_bridge_back_end.dto.CardDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.CardMapper;
 import com.stripe.exception.StripeException;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -211,5 +213,39 @@ public class CardService {
     public boolean userHasCard(Long userId) {
         List<Card> cards = cardDAO.findAllCardsByUserId(userId);
         return cards != null && !cards.isEmpty();
+    }
+
+    public List<CardDTO> getAllCardsForUser(Long userId) {
+        List<Card> cards = cardDAO.findAllCardsByUserId(userId);
+
+
+        if (cards != null && !cards.isEmpty()) {
+
+            return cards.stream().map(this::convertToCardDTO).collect(Collectors.toList());
+        }
+
+        else
+            return new ArrayList<>();
+    }
+
+    @Transactional
+    public CardDTO deleteCardByUserId(Long userId) {
+
+        Card cardToBeDeleted = cardDAO.findCardByUserId(userId);
+        if (cardToBeDeleted == null) {
+            throw new IllegalArgumentException("Card not found or not owned by user");
+        }
+        Long cardId = cardToBeDeleted.getCardId();
+        Card card = cardDAO.findCardById(cardId);
+        if (card == null) {
+            throw new IllegalArgumentException("Card not found or not owned by user");
+        }
+        CardDTO cardPreview = convertToCardDTO(card);
+        cardDAO.deleteCard(cardId);
+        return cardPreview;
+    }
+
+    private CardDTO convertToCardDTO(Card card) {
+        return new CardDTO(card);
     }
 }

@@ -65,6 +65,16 @@ public class PostService {
         return post;
     }
 
+
+    // get all posts with not caring for FavouriteCategory
+    public List<PostDTO> getAllPosts() {
+        List<Post> posts = postDAO.findApprovedPosts();
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return PostMapper.toDTOList(posts);
+    }
+
     // retrieves posts created by a given author (learner)
     public List<PostDTO> getPostsByAuthorId(Long authorId) {
         List<Post> posts = postDAO.findAllPostsByUserId(authorId);
@@ -183,6 +193,7 @@ public class PostService {
             return PostMapper.toDTO(postToBeRejected);
         }
     }
+
 
 
 }

@@ -1,9 +1,13 @@
 package com.learnbridge.learn_bridge_back_end.dto;
 
+import com.learnbridge.learn_bridge_back_end.entity.UserRole;
+
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 public class PersonalInfoDTO {
 
+    private UserRole userRole;
     private String firstName;
     private String lastName;
     private String email;
@@ -13,6 +17,7 @@ public class PersonalInfoDTO {
     private String bio;
     private BigDecimal avgPrice;
     private byte[] personalImage;
+
 
     public String getFirstName() {
         return firstName;
@@ -84,5 +89,29 @@ public class PersonalInfoDTO {
 
     public void setPersonalImage(byte[] personalImage) {
         this.personalImage = personalImage;
+    }
+
+    public UserRole getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(UserRole userRole) {
+        this.userRole = userRole;
+    }
+
+    @Override
+    public String toString() {
+        return "PersonalInfoDTO{" +
+                "userRole=" + userRole +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", favouriteCategory='" + favouriteCategory + '\'' +
+                ", universityInfo='" + universityInfo + '\'' +
+                ", bio='" + bio + '\'' +
+                ", avgPrice=" + avgPrice +
+                ", personalImage=" + Arrays.toString(personalImage) +
+                '}';
     }
 }

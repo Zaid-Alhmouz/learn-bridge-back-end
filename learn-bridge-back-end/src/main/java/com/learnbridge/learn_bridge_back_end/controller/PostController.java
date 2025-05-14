@@ -161,4 +161,14 @@ public class PostController {
         else
             return ResponseEntity.ok(rejectedPost);
     }
+
+    @GetMapping("/all-posts")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PostDTO>> getAllPosts(@AuthenticationPrincipal SecurityUser loggedUser) {
+        List<PostDTO> allPosts = postService.getAllPosts();
+        if(allPosts == null || allPosts.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(allPosts);
+    }
 }

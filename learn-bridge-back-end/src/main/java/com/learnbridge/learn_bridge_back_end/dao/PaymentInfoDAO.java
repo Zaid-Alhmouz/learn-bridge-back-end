@@ -12,6 +12,7 @@ public interface PaymentInfoDAO {
     PaymentInfo findPaymentInfoById(Long transactionId);
     void deletePaymentInfo(Long transactionId);
     List<PaymentInfo> findAllPaymentInfos();
+    List<PaymentInfo> findAllPaymentInfosByUserId(Long userId);
 
     Optional<PaymentInfo> findByStripePaymentIntentId(String paymentIntentId);
 

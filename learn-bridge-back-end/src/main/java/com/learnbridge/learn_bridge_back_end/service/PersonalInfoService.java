@@ -88,4 +88,46 @@ public class PersonalInfoService {
             instructorDAO.updateInstructor(existingInstructor);
         }
     }
+
+    public PersonalInfoDTO getPersonalInfo(Long userId) {
+        User user = userDAO.findUserById(userId);
+        PersonalInfoDTO personalInfoDTO = new PersonalInfoDTO();
+        if (user == null) {
+            throw new RuntimeException("User not found for id: " + userId);
+        }
+
+        if (user.getUserRole() == UserRole.LEARNER) {
+            Learner learner = learnerDAO.findLearnerById(userId);
+            if (learner == null) {
+                throw new RuntimeException("Learner not found for user id: " + userId);
+            }
+
+            personalInfoDTO.setFirstName(learner.getFirstName());
+            personalInfoDTO.setLastName(learner.getLastName());
+            personalInfoDTO.setPersonalImage(learner.getPersonalImage());
+            personalInfoDTO.setFavouriteCategory(learner.getFavouriteCategory());
+            personalInfoDTO.setEmail(user.getEmail());
+            personalInfoDTO.setUniversityInfo(" ");
+            personalInfoDTO.setBio(" ");
+            personalInfoDTO.setAvgPrice(null);
+            personalInfoDTO.setUserRole(user.getUserRole());
+        }
+        else if (user.getUserRole() == UserRole.INSTRUCTOR) {
+            Instructor instructor = instructorDAO.findInstructorById(userId);
+            if (instructor == null) {
+                throw new RuntimeException("Instructor not found for user id: " + userId);
+            }
+            personalInfoDTO.setFirstName(instructor.getFirstName());
+            personalInfoDTO.setLastName(instructor.getLastName());
+            personalInfoDTO.setFavouriteCategory(instructor.getFavouriteCategory());
+            personalInfoDTO.setUniversityInfo(instructor.getUniversityInfo());
+            personalInfoDTO.setBio(instructor.getInstructorBio());
+            personalInfoDTO.setAvgPrice(instructor.getAvgPrice());
+            personalInfoDTO.setUserRole(user.getUserRole());
+            personalInfoDTO.setPersonalImage(instructor.getInstructorImage());
+            personalInfoDTO.setEmail(user.getEmail());
+        }
+
+        return personalInfoDTO;
+    }
 }

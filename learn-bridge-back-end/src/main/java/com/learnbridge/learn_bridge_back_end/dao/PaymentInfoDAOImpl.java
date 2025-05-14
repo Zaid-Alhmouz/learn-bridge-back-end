@@ -7,6 +7,7 @@ import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,21 @@ public class PaymentInfoDAOImpl implements PaymentInfoDAO {
     @Override
     public List<PaymentInfo> findAllPaymentInfos() {
         return entityManager.createQuery("from PaymentInfo", PaymentInfo.class).getResultList();
+    }
+
+    @Override
+    public List<PaymentInfo> findAllPaymentInfosByUserId(Long userId) {
+
+        TypedQuery<PaymentInfo> query = entityManager.createQuery("select p from PaymentInfo p where p.user.userId = :userId", PaymentInfo.class);
+        query.setParameter("userId", userId);
+        List<PaymentInfo> paymentInfos = query.getResultList();
+
+        if (paymentInfos == null || paymentInfos.isEmpty()) {
+            return new ArrayList<PaymentInfo>();
+        }
+
+        else
+            return paymentInfos;
     }
 
 
