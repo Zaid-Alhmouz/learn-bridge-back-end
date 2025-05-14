@@ -1,8 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.service;
 
-import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
-import com.learnbridge.learn_bridge_back_end.dao.PostDAO;
-import com.learnbridge.learn_bridge_back_end.dao.UserDAO;
+import com.learnbridge.learn_bridge_back_end.dao.*;
 import com.learnbridge.learn_bridge_back_end.dto.CreatePostRequest;
 import com.learnbridge.learn_bridge_back_end.dto.PostDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
@@ -29,6 +27,12 @@ public class PostService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private AgreementDAO agreementDAO;
+
+    @Autowired
+    private SessionDAO sessionDAO;
 
 
     // create post by learner
@@ -58,6 +62,7 @@ public class PostService {
         post.setPostStatus(PostStatus.PENDING);
         post.setCategory(postRequest.getCategory());
         post.setPrice(postRequest.getPrice());
+        post.setSessionDeadline(postRequest.getSessionDeadline());
 
         // save the post
         postDAO.savePost(post);
@@ -130,18 +135,36 @@ public class PostService {
 
     // delete post published by learner
     public void deletePost(SecurityUser loggedUser, Long postId) {
-
         Long authorId = loggedUser.getUser().getId();
-
         PostId compositeId = new PostId(authorId, postId);
 
-
-       // verify that the post exists and belongs to this user
+        // 1) verify ownership
         Post post = postDAO.findPostById(compositeId);
-        if (post == null || !post.getAuthorId().equals(authorId)) {
+        if (post == null) {
             throw new RuntimeException("Post not found or you are not the owner of this post.");
         }
 
+        // 2) fetch agreements by two keys
+        List<Agreement> agreements =
+                agreementDAO.findByPost_PostIdAndPost_AuthorId(postId, authorId);
+
+        for (Agreement agr : agreements) {
+            Long agrId = agr.getAgreementId();
+
+            // 3) check for any session
+            List<Session> sessions = sessionDAO.findByAgreementId(agrId);
+            if (sessions != null && !sessions.isEmpty()) {
+                throw new RuntimeException(
+                        "Cannot delete post because agreement #" + agrId +
+                                " already has an active session."
+                );
+            }
+
+            // 4) safe to delete the agreement
+            agreementDAO.deleteAgreement(agrId);
+        }
+
+        // 5) delete the post itself
         postDAO.deletePost(compositeId);
     }
 

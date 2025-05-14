@@ -37,8 +37,28 @@ public class AgreementDAOImpl implements AgreementDAO {
     @Override
     @Transactional
     public void deleteAgreement(Long agreementId) {
+        Agreement agr = entityManager.find(Agreement.class, agreementId);
+        if (agr != null) {
+            entityManager.remove(agr);
+        }
+    }
 
-        entityManager.remove(entityManager.contains(agreementId) ? agreementId : entityManager.merge(agreementId));
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agreement> findByPost_PostIdAndPost_AuthorId(Long postId, Long authorId) {
+        String jpql = """
+            SELECT a
+              FROM Agreement a
+             WHERE a.post.postId   = :postId
+               AND a.post.authorId = :authorId
+        """;
+
+        return entityManager
+                .createQuery(jpql, Agreement.class)
+                .setParameter("postId", postId)
+                .setParameter("authorId", authorId)
+                .getResultList();
     }
 
     @Override
@@ -71,4 +91,6 @@ public class AgreementDAOImpl implements AgreementDAO {
         query.setParameter("post_id", postId);
         return query.getResultList();
     }
+
+
 }

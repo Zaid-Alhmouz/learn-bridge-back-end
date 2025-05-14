@@ -8,6 +8,7 @@ import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -76,6 +77,9 @@ public class SessionDAOImpl implements SessionDAO {
                 "SELECT s FROM Session s WHERE s.agreement.agreementId = :agreement_id",
                 Session.class);
         query.setParameter("agreement_id", agreementId);
+        if (query.getResultList() == null || query.getResultList().isEmpty()) {
+            return new ArrayList<Session>();
+        }
         return query.getResultList();
     }
 

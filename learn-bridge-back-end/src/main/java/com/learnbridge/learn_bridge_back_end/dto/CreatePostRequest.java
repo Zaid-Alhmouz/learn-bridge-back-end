@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.dto;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class CreatePostRequest {
 
@@ -10,6 +11,8 @@ public class CreatePostRequest {
     private String content;
     private String category;
     private BigDecimal price;
+    private LocalDate sessionDeadline;
+
 
 
 
@@ -43,5 +46,10 @@ public class CreatePostRequest {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public LocalDate getSessionDeadline() { return sessionDeadline; }
+    public void setSessionDeadline(LocalDate sessionDeadline) {
+        this.sessionDeadline = sessionDeadline;
     }
 }

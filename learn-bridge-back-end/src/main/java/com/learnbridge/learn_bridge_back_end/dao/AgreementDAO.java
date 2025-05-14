@@ -14,4 +14,5 @@ public interface AgreementDAO {
     List<Agreement> findAgreementByLearnerId(Long learnerId);
     List<Agreement> findAgreementByInstructorId(Long instructorId);
     List<Agreement> findAgreementByPostId(PostId postId);
+    List<Agreement> findByPost_PostIdAndPost_AuthorId(Long postId, Long authorId);
 }

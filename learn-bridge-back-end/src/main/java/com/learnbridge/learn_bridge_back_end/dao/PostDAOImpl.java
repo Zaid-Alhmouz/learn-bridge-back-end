@@ -56,7 +56,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public List<Post> findApprovedPosts() {
-        String sql = "select p from Post p where p.postStatus = :PostStatus";
+        String sql = "select p from Post p where p.postStatus = :PostStatus AND p.sessionDeadline >= CURRENT_DATE()";
         TypedQuery<Post> query = entityManager.createQuery(sql, Post.class);
         query.setParameter("PostStatus", PostStatus.ACCEPTED);
         List<Post> posts = query.getResultList();

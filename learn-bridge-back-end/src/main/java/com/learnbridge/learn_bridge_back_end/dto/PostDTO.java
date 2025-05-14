@@ -4,6 +4,7 @@ import com.learnbridge.learn_bridge_back_end.entity.Post;
 import com.learnbridge.learn_bridge_back_end.entity.PostStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class PostDTO {
@@ -17,6 +18,7 @@ public class PostDTO {
     private String content;
     private PostStatus postStatus;
     private String category;
+    private LocalDate sessionDeadline;
 
     public PostDTO() {}
 
@@ -34,6 +36,7 @@ public class PostDTO {
         this.content = post.getContent();
         this.postStatus = post.getPostStatus();
         this.category = post.getCategory();
+        this.sessionDeadline = post.getSessionDeadline();
     }
 
     public Long getPostId() {
@@ -106,5 +109,29 @@ public class PostDTO {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public LocalDate getSessionDeadline() {
+        return sessionDeadline;
+    }
+
+    public void setSessionDeadline(LocalDate sessionDeadline) {
+        this.sessionDeadline = sessionDeadline;
+    }
+
+    @Override
+    public String toString() {
+        return "PostDTO{" +
+                "postId=" + postId +
+                ", authorId=" + authorId +
+                ", authorName='" + authorName + '\'' +
+                ", approvalDate=" + approvalDate +
+                ", price=" + price +
+                ", subject='" + subject + '\'' +
+                ", content='" + content + '\'' +
+                ", postStatus=" + postStatus +
+                ", category='" + category + '\'' +
+                ", sessionDeadline=" + sessionDeadline +
+                '}';
     }
 }

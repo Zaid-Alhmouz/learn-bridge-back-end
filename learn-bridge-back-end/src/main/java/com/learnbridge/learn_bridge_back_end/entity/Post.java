@@ -45,6 +45,8 @@ public class Post {
     @Column(name = "category", nullable = false, length = 50)
     private String category;
 
+    @Column(name = "session_deadline", nullable = true)
+    private LocalDate sessionDeadline;
 
     public Long getAuthorId() {
         return authorId;
@@ -118,18 +120,28 @@ public class Post {
         this.category = category;
     }
 
+
+
+    public LocalDate getSessionDeadline() {
+        return sessionDeadline;
+    }
+    public void setSessionDeadline(LocalDate sessionDeadline) {
+        this.sessionDeadline = sessionDeadline;
+    }
+
     @Override
     public String toString() {
-
         return "Post{" +
-                "post_id=" + postId +
-                ", authorId=" + author.getUser().getId() +
+                "authorId=" + authorId +
+                ", postId=" + postId +
+                ", author=" + author +
                 ", approvalDate=" + approvalDate +
                 ", price=" + price +
                 ", subject='" + subject + '\'' +
                 ", content='" + content + '\'' +
                 ", postStatus=" + postStatus +
                 ", category='" + category + '\'' +
+                ", sessionDeadline=" + sessionDeadline +
                 '}';
     }
 }
