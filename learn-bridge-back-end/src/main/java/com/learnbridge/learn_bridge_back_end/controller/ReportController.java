@@ -78,20 +78,18 @@ public class ReportController {
         }
     }
 
-    @PostMapping("/create-report/{relatedSessionId}/{reportedUserId}")
-    public ResponseEntity<ReportDTO> createReport(@RequestBody ReportDTO reportDTO, @AuthenticationPrincipal SecurityUser loggedUser, @PathVariable Long relatedSessionId, @PathVariable Long reportedUserId) {
-
+    @PostMapping("/create-report/{chatId}")
+    public ResponseEntity<ReportDTO> createReport(
+            @PathVariable Long chatId,
+            @RequestBody ReportDTO reportDTO,
+            @AuthenticationPrincipal SecurityUser loggedUser
+    ) {
         Long reporterId = loggedUser.getUser().getId();
         String description = reportDTO.getDescription();
-        ReportType reportType = reportDTO.getReportType();
-
-       ReportDTO createdReport = reportService.createReport(reporterId, reportedUserId, relatedSessionId, description, reportType);
-       if (createdReport == null) {
-           return ResponseEntity.notFound().build();
-       }
-       else {
-           return new ResponseEntity<>(createdReport, HttpStatus.CREATED);
-       }
+        ReportDTO createdReport = reportService.createReportByChat(
+                reporterId, chatId, description, reportDTO.getReportType()
+        );
+        return new ResponseEntity<>(createdReport, HttpStatus.CREATED);
     }
 
 }

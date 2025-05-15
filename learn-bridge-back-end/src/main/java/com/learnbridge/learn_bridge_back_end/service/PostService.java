@@ -128,6 +128,7 @@ public class PostService {
         post.setPostStatus(editPostRequest.getPostStatus());
         post.setCategory(editPostRequest.getCategory());
         post.setPrice(editPostRequest.getPrice());
+        post.setSessionDeadline(editPostRequest.getSessionDeadline());
 
         postDAO.updatePost(post);
         return post;
@@ -217,6 +218,8 @@ public class PostService {
         }
     }
 
-
+    public Post findPostById(PostId id) {
+        return postDAO.findPostById(id);
+    }
 
 }

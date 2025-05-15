@@ -34,58 +34,83 @@ public class ReviewService {
     @Autowired
     private SessionParticipantsDAO sessionParticipantsDAO;
 
+    @Autowired
+    private ChatDAO chatDAO;
 
-    // add review service
-    public ReviewDTO addReview(ReviewDTO reviewDTO) {
 
-        Rating ratingToBeAdded = new Rating();
+    /**
+     * Add a review using chatId. Determines session and who reviews whom based on role.
+     */
+    public ReviewDTO addReviewByChat(
+            Long chatId,
+            Long reviewerId,
+            int stars,
+            String description
+    ) {
+        Chat chat = chatDAO.findChatById(chatId);
+        if (chat == null) throw new RuntimeException("Chat not found: " + chatId);
+        Session session = chat.getSession();
+        if (session == null) throw new RuntimeException("Session not found for chat: " + chatId);
 
-        Session session = sessionDAO.findSessionById(reviewDTO.getSessionId());
-        Instructor instructor = instructorDAO.findInstructorById(reviewDTO.getInstructorId());
-        Learner learner = learnerDAO.findLearnerById(reviewDTO.getLearnerId());
-        List<SessionParticipants> participants = sessionParticipantsDAO.findParticipantsBySession(session);
+        User reviewer = userDAO.findUserById(reviewerId);
+        if (reviewer == null) throw new RuntimeException("Reviewer not found: " + reviewerId);
 
-        boolean found = false;
+        UserRole role = reviewer.getUserRole();
+        Rating rating = new Rating();
+        rating.setSession(session);
+        rating.setStars(stars);
+        rating.setDescription(description);
 
-        if (learner == null || session == null || instructor==null) {
-            throw new RuntimeException("Learner or session or learner not found");
+        if (role == UserRole.LEARNER) {
+            // learner reviews instructor
+            Instructor instr = instructorDAO.findInstructorById(session.getInstructor().getId());
+            if (instr == null) throw new RuntimeException("Instructor not in session " + session.getSessionId());
+            rating.setInstructor(instr);
+            Learner learner = learnerDAO.findLearnerById(reviewerId);
+            if (learner == null) throw new RuntimeException("Learner not found: " + reviewerId);
+            rating.setLearner(learner);
+        } else if (role == UserRole.INSTRUCTOR) {
+            // instructor reviews learner
+            List<SessionParticipants> parts = sessionParticipantsDAO.findParticipantsBySession(session);
+            if (parts.isEmpty()) throw new RuntimeException("No learner in session " + session.getSessionId());
+            Learner learner = learnerDAO.findLearnerById(parts.get(0).getLearnerId());
+            if (learner == null) throw new RuntimeException("Learner not found");
+            rating.setLearner(learner);
+            Instructor instr = instructorDAO.findInstructorById(reviewerId);
+            if (instr == null) throw new RuntimeException("Instructor not found: " + reviewerId);
+            rating.setInstructor(instr);
+        } else {
+            throw new RuntimeException("Role not allowed for review: " + role);
         }
 
-        if (!(session.getInstructor().getId().equals(instructor.getInstructorId())))
-        {
-            throw new RuntimeException("Instructor does not belong to session");
-        }
-
-        for(SessionParticipants participant: participants) {
-            if (participant.getSession().equals(session)) {
-                found = true;
-            }
-        }
-        if (!found) {
-            throw new RuntimeException("Learner does not belong to session");
-        }
-
-        ratingToBeAdded.setSession(session);
-        ratingToBeAdded.setInstructor(instructor);
-        ratingToBeAdded.setLearner(learner);
-        ratingToBeAdded.setDescription(reviewDTO.getDescription());
-        ratingToBeAdded.setStars(reviewDTO.getStars());
-        ratingToBeAdded.setReviewDate(reviewDTO.getReviewDate());
-
-        return ReviewMapper.toDTO(ratingDAO.saveRating(ratingToBeAdded));
+        Rating saved = ratingDAO.saveRating(rating);
+        return ReviewMapper.toDTO(saved);
     }
 
-    // learner can delete his review
-    public ReviewDTO deleteReview(Long reviewId) {
+    /**
+     * Delete a review by chatId and reviewer. Looks up the rating by session and reviewer.
+     */
+    public ReviewDTO deleteReviewByChat(Long chatId, Long reviewerId) {
+        Chat chat = chatDAO.findChatById(chatId);
+        if (chat == null) throw new RuntimeException("Chat not found: " + chatId);
+        Session session = chat.getSession();
+        if (session == null) throw new RuntimeException("Session not found for chat: " + chatId);
 
-        Rating ratingToBeDeleted = ratingDAO.findRatingByRatingId(reviewId);
-
-        if (ratingToBeDeleted == null) {
-            throw new RuntimeException("Review not found");
+        // find rating by session and reviewer role
+        UserRole role = userDAO.findUserById(reviewerId).getUserRole();
+        Rating rating;
+        if (role == UserRole.LEARNER) {
+            rating = ratingDAO.findRatingBySessionAndLearnerId(session.getSessionId(), reviewerId);
+        } else if (role == UserRole.INSTRUCTOR) {
+            // need a DAO method to find by session and instructor
+            rating = ratingDAO.findRatingBySessionAndInstructorId(session.getSessionId(), reviewerId);
+        } else {
+            throw new RuntimeException("Role not allowed for delete: " + role);
         }
-        ratingDAO.deleteRating(reviewId);
 
-        return ReviewMapper.toDTO(ratingToBeDeleted);
+        if (rating == null) throw new RuntimeException("Rating not found for session: " + session.getSessionId());
+        ratingDAO.deleteRating(rating.getRatingId());
+        return ReviewMapper.toDTO(rating);
     }
 
     // get all reviews for instructor

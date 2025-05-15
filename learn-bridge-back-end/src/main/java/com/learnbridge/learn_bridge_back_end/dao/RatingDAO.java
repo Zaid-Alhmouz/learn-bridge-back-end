@@ -14,5 +14,6 @@ public interface RatingDAO {
     List<Rating> findRatingsByInstructorId(Long instructorId);
     void deleteRatingBySessionAndLearnerId(Long sessionId, Long learnerId);
     Rating findRatingByRatingId(Long ratingId);
+    Rating findRatingBySessionAndInstructorId(Long sessionId, Long instructorId);
 
 }

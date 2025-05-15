@@ -2,6 +2,7 @@ package com.learnbridge.learn_bridge_back_end.dao;
 
 import com.learnbridge.learn_bridge_back_end.entity.Rating;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
@@ -74,5 +75,21 @@ public class RatingDAOImpl implements RatingDAO {
     @Override
     public Rating findRatingByRatingId(Long ratingId) {
         return entityManager.find(Rating.class, ratingId);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Rating findRatingBySessionAndInstructorId(Long sessionId, Long instructorId) {
+        try {
+            return entityManager.createQuery(
+                            "SELECT r FROM Rating r WHERE r.session.sessionId = :sessionId "
+                                    + "AND r.instructor.instructorId = :instructorId", Rating.class)
+                    .setParameter("sessionId", sessionId)
+                    .setParameter("instructorId", instructorId)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 }

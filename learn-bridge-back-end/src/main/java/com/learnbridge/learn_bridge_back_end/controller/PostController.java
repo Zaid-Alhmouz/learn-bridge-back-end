@@ -24,7 +24,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
-@CrossOrigin(origins = "http://localhost:4200") // to connect with angular front end
+@CrossOrigin(origins = "http://localhost:4200",
+allowCredentials = "true"
+) // to connect with angular front end
 public class PostController {
 
     @Autowired
@@ -94,13 +96,11 @@ public class PostController {
 
 
     @PutMapping("/edit-post")
-    public ResponseEntity<?> editPost(@AuthenticationPrincipal SecurityUser loggedUser, @RequestBody PostDTO editPostRequest)
-    {
-        Post post = postService.editPost(loggedUser, editPostRequest);
-
-        PostDTO updatedPost = PostMapper.toDTO(post);
-
-        return ResponseEntity.ok(updatedPost);
+    public ResponseEntity<PostDTO> editPost(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestBody PostDTO dto) {
+        Post updated = postService.editPost(user, dto);
+        return ResponseEntity.ok(new PostDTO(updated));
     }
 
     @DeleteMapping("/{postId}") // http://localhost:8080/api/posts/5
@@ -170,5 +170,21 @@ public class PostController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(allPosts);
+    }
+
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDTO> getPost(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long postId) {
+
+        Long authorId = user.getUser().getId();
+        PostId id = new PostId(authorId, postId);
+        Post post = postService.findPostById(id);
+
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new PostDTO(post));
     }
 }

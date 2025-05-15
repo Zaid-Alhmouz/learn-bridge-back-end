@@ -22,34 +22,32 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
+    /**
+     * Add a review based on chatId; session, reviewer and reviewee are inferred by role.
+     */
     @PreAuthorize("hasRole('LEARNER')")
-    @PostMapping("/add-review/{sessionId}/{instructorId}")
-    public ResponseEntity<ReviewDTO> addReview(@PathVariable Long sessionId, @PathVariable Long instructorId, @RequestBody ReviewDTO reviewDTO, @AuthenticationPrincipal SecurityUser loggedUser) {
-
-        ReviewDTO reviewToBeCreated = new ReviewDTO();
-        reviewToBeCreated.setSessionId(sessionId);
-        reviewToBeCreated.setInstructorId(instructorId);
-        reviewToBeCreated.setLearnerId(loggedUser.getUser().getId());
-        reviewToBeCreated.setReviewDate(LocalDate.now());
-        reviewToBeCreated.setDescription(reviewDTO.getDescription());
-        reviewToBeCreated.setStars(reviewDTO.getStars());
-
-        ReviewDTO addedReview = reviewService.addReview(reviewToBeCreated);
-
-        if (addedReview == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(addedReview, HttpStatus.OK);
+    @PostMapping("/add-review/{chatId}")
+    public ResponseEntity<ReviewDTO> addReviewByChat(
+            @PathVariable Long chatId,
+            @RequestBody ReviewDTO reviewDTO,
+            @AuthenticationPrincipal SecurityUser loggedUser
+    ) {
+        Long reviewerId = loggedUser.getUser().getId();
+        int stars = reviewDTO.getStars();
+        String description = reviewDTO.getDescription();
+        ReviewDTO added = reviewService.addReviewByChat(chatId, reviewerId, stars, description);
+        return new ResponseEntity<>(added, HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('LEARNER')")
-    @DeleteMapping("/delete-review/{ratingId}")
-    public ResponseEntity<ReviewDTO> deleteReview(@PathVariable Long ratingId) {
-        ReviewDTO reviewToBeDeleted = reviewService.deleteReview(ratingId);
-        if (reviewToBeDeleted == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(reviewToBeDeleted, HttpStatus.OK);
+    @DeleteMapping("/delete-review/{chatId}")
+    public ResponseEntity<ReviewDTO> deleteReviewByChat(
+            @PathVariable Long chatId,
+            @AuthenticationPrincipal SecurityUser loggedUser
+    ) {
+        Long reviewerId = loggedUser.getUser().getId();
+        ReviewDTO deleted = reviewService.deleteReviewByChat(chatId, reviewerId);
+        return new ResponseEntity<>(deleted, HttpStatus.OK);
     }
 
     // for instructor when he wants to retrieve his reviews by learners

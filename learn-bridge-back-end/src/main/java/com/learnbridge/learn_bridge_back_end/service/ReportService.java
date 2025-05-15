@@ -34,6 +34,9 @@ public class ReportService {
     @Autowired
     SessionParticipantsDAO sessionParticipantsDAO;
 
+    @Autowired
+    ChatDAO chatDAO;
+
     // get all pending reports for the admin
     public List<ReportDTO> getAllPendingReports()
     {
@@ -89,42 +92,68 @@ public class ReportService {
         return UserMapper.toUserDTO(userToBeBlocked);
     }
 
-    public ReportDTO createReport(Long reporterId, Long reportedId, Long relatedSessionId, String description, ReportType reportType)
-    {
-        User reporter     = userDAO.findUserById(reporterId);
-        User reportedUser = userDAO.findUserById(reportedId);
-        Session session   = sessionDAO.findSessionById(relatedSessionId);
-        List<SessionParticipants> participants = sessionParticipantsDAO.findParticipantsBySession(session);
 
-        boolean found = false;
-
-        if (reporter == null || reportedUser == null || session == null) {
-            throw new RuntimeException("Invalid reporter, reportedUser or session ID.");
+    // create a report based on chatId
+    public ReportDTO createReportByChat(
+            Long reporterId,
+            Long chatId,
+            String description,
+            ReportType reportType
+    ) {
+        // Fetch chat and session
+        Chat chat = chatDAO.findChatById(chatId);
+        if (chat == null) {
+            throw new RuntimeException("Chat not found for id " + chatId);
+        }
+        Session session = chat.getSession();
+        if (session == null) {
+            throw new RuntimeException("Session not found for chat id " + chatId);
         }
 
-        for (SessionParticipants participant: participants) {
-            if (participant.getSession().equals(session)) {
-                found = true;
+        // Fetch reporter
+        User reporter = userDAO.findUserById(reporterId);
+        if (reporter == null) {
+            throw new RuntimeException("Reporter not found for id " + reporterId);
+        }
+
+        // Determine reported user based on reporter role
+        User reportedUser;
+        UserRole role = reporter.getUserRole();
+        if (role == UserRole.LEARNER) {
+            // Learner reporting: reported is the instructor
+            reportedUser = userDAO.findUserById(session.getInstructor().getId());
+            if (reportedUser == null) {
+                throw new RuntimeException("Instructor user not found for session " + session.getSessionId());
             }
+        } else if (role == UserRole.INSTRUCTOR) {
+            // Instructor reporting: reported is the learner participant
+            List<SessionParticipants> participants = sessionParticipantsDAO.findParticipantsBySession(session);
+            if (participants.isEmpty()) {
+                throw new RuntimeException("No learner found in session " + session.getSessionId());
+            }
+            Long learnerId = participants.get(0).getLearnerId();
+            Learner learner = learnerDAO.findLearnerById(learnerId);
+            if (learner == null || learner.getUser() == null) {
+                throw new RuntimeException("Learner user not found for learnerId " + learnerId);
+            }
+            reportedUser = learner.getUser();
+        } else {
+            throw new RuntimeException("Invalid user role for reporting: " + role);
         }
 
-        if (!found)
-        {
-            throw new RuntimeException("Learner with id " + reportedId + " not found in session." + session.getSessionId());
-        }
-
+        // Build and save report
         Report report = new Report();
+        report.setSession(session);
         report.setReporter(reporter);
         report.setReportedUser(reportedUser);
-        report.setSession(session);
         report.setDescription(description);
         report.setReportType(reportType);
         report.setReportStatus(ReportStatus.PENDING);
-        report.setCreationDate(LocalDateTime.now());
-
         reportDAO.saveReport(report);
 
         return ReportMapper.toReportDTO(report);
     }
-
 }
+
+
+
