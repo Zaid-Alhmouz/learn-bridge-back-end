@@ -113,18 +113,21 @@ public class ReportController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportDTO> refundLearner(@PathVariable Long reportId) {
         try {
-            // 1) do the mock-or-live refund and get back the entity
+            // 1) perform mock-or-live refund/resolution
             Report report = reportService.refundOrMock(reportId);
+            PaymentInfo info = report.getSession().getTransaction();
 
-            // 2) extract exactly what we need from the entity:
-            User learner    = report.getReporter();                   // who filed the report
-            BigDecimal amt  = report.getSession().getTransaction().getAmount();
-            String  refId   = report.getSession().getTransaction().getStripeRefundId();
-
-            // 3) send the notification
+            // 2) notify the learner
+            User learner = report.getReporter();
+            BigDecimal amt    = info.getAmount();
+            String   refId    = info.getStripeRefundId();
             notificationService.sendRefundNotification(learner, amt, refId);
 
-            // 4) return a DTO for the front-end
+            // 3) **notify the instructor** that funds were taken back
+            User instructor = report.getSession().getInstructor();
+            notificationService.sendRefundTakenNotification(instructor, learner, amt, refId);
+
+            // 4) return the updated DTO
             return ResponseEntity.ok(reportService.toDTO(report));
         }
         catch (EntityNotFoundException ex) {

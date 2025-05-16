@@ -264,6 +264,24 @@ public class NotificationService {
         return toDTO(notification);
     }
 
+    @Transactional
+    public Notifications sendRefundTakenNotification(User instructor,User learner,
+                                                     BigDecimal amount,
+                                                     String refundId) {
+        Notifications notification = new Notifications();
+        notification.setUser(instructor);
+        notification.setNotificationType("REFUND_TAKEN");
+        notification.setReadStatus(ReadStatus.UNREAD);
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setMessage(String.format(
+                "%sJOD has been removed from your account to refund the learner " + learner.getFirstName() + " " + learner.getLastName() + ".",
+                amount, refundId
+        ));
+        return notificationsDAO.saveNotification(notification);
+    }
+
+
+
     /**
      * Convert entity to DTO
      */
