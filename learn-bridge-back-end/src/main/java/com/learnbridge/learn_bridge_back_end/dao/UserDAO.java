@@ -18,4 +18,6 @@ public interface UserDAO {
      User findUserById(Long userId);
 
      List<User> findAllUsers();
+
+     List<User> findBlockedUsers();
 }

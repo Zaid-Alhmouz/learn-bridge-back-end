@@ -1,5 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.dao;
 
+import com.learnbridge.learn_bridge_back_end.entity.AccountStatus;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -59,5 +61,17 @@ public class UserDAOImp implements UserDAO {
     @Override
     public List<User> findAllUsers() {
        return entityManager.createQuery("from User", User.class).getResultList();
+    }
+
+    @Override
+    public List<User> findBlockedUsers() {
+
+       String sqlStatement = "SELECT u FROM User u WHERE u.accountStatus = :accountStatus";
+       TypedQuery<User> query = entityManager.createQuery(sqlStatement, User.class);
+       query.setParameter("accountStatus", AccountStatus.BLOCKED);
+       if (query.getResultList().isEmpty()) {
+           return new ArrayList<User>();
+       }
+       return query.getResultList();
     }
 }
