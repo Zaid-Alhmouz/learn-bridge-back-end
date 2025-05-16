@@ -2,7 +2,9 @@ package com.learnbridge.learn_bridge_back_end.service;
 
 
 import com.learnbridge.learn_bridge_back_end.dao.*;
+import com.learnbridge.learn_bridge_back_end.dto.AdminChatReviewDTO;
 import com.learnbridge.learn_bridge_back_end.dto.ChatSummaryDTO;
+import com.learnbridge.learn_bridge_back_end.dto.FileDTO;
 import com.learnbridge.learn_bridge_back_end.dto.MessageDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.MessageMapper;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -31,6 +34,9 @@ public class ChatService {
     @Autowired private SessionDAO sessionDAO;
 
     @Autowired private SessionParticipantsDAO participantsDAO;
+
+    @Autowired
+    private FileDAO fileDAO;
 
 
     // create message and store it in database
@@ -139,6 +145,52 @@ public class ChatService {
         }
 
         return result;
+    }
+
+    /**
+     * Retrieves full chat details for admin review.
+     */
+    @Transactional(readOnly = true)
+    public AdminChatReviewDTO reviewChat(Long chatId) {
+        Chat chat = chatDAO.findChatById(chatId);
+        if (chat == null) {
+            throw new IllegalArgumentException("Chat ID not found: " + chatId);
+        }
+
+        Session session = chat.getSession();
+        Long sessionId = session.getSessionId();
+        String sessionStatus = session.getSessionStatus().name();
+
+        // Instructor
+        Long instructorId = session.getInstructor().getId();
+        String instructorName = session.getInstructor().getFirstName() + " " + session.getInstructor().getLastName();
+
+        // Learner (assumes single participant)
+        SessionParticipants participant = session.getParticipants()
+                .stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("No learner participant found for session " + sessionId));
+        Long learnerId = participant.getLearnerId();
+        String learnerName = participant.getLearner().getFirstName() + " " + participant.getLearner().getLastName();
+
+        // Messages and files
+        List<MessageDTO> messages = textMessageDAO.findTextMessageByChatId(chatId)
+                .stream().map(MessageDTO::new)
+                .collect(Collectors.toList());
+        List<FileDTO> files = fileDAO.findFilesByChatId(chatId)
+                .stream().map(FileDTO::new)
+                .collect(Collectors.toList());
+
+        return new AdminChatReviewDTO(
+                chatId,
+                sessionId,
+                sessionStatus,
+                instructorId,
+                instructorName,
+                learnerId,
+                learnerName,
+                messages,
+                files
+        );
     }
 
 }

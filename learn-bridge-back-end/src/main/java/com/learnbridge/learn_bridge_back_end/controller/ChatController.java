@@ -1,5 +1,6 @@
 package com.learnbridge.learn_bridge_back_end.controller;
 
+import com.learnbridge.learn_bridge_back_end.dto.AdminChatReviewDTO;
 import com.learnbridge.learn_bridge_back_end.dto.ChatSummaryDTO;
 import com.learnbridge.learn_bridge_back_end.dto.MessageDTO;
 import com.learnbridge.learn_bridge_back_end.entity.User;
@@ -87,6 +88,13 @@ public class ChatController {
             // on any unexpected error, return empty list rather than 500
             return ResponseEntity.ok(Collections.emptyList());
         }
+    }
+
+    @GetMapping("/admin/review-chat/{chatId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminChatReviewDTO> reviewChat(@PathVariable Long chatId) {
+        AdminChatReviewDTO dto = chatService.reviewChat(chatId);
+        return ResponseEntity.ok(dto);
     }
 
 }
