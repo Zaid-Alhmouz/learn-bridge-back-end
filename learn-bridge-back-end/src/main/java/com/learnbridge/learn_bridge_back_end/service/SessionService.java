@@ -105,21 +105,21 @@ public class SessionService {
         }
 
         // 2. Capture the authorized payment
-        PaymentInfo info = session.getTransaction();
-        PaymentIntent captured = stripeService.capturePayment(info.getStripePaymentIntentId());
-        info.setCaptured(true);
+        PaymentInfo learnerPaymentInfo = session.getTransaction();
+        PaymentIntent captured = stripeService.capturePayment(learnerPaymentInfo.getStripePaymentIntentId());
+        learnerPaymentInfo.setCaptured(true);
 
         // 3. Retrieve and save the latest Charge ID
         String latestChargeId = captured.getLatestCharge();
         if (latestChargeId != null) {
             Charge charge = Charge.retrieve(latestChargeId);
-            info.setStripeChargeId(charge.getId());
+            learnerPaymentInfo.setStripeChargeId(charge.getId());
         } else {
             throw new IllegalStateException("No charge associated with the PaymentIntent.");
         }
 
         // 4. Transfer funds to the instructor’s CONNECT account (mock in test mode)
-        long amountCents = info.getAmount().multiply(new BigDecimal(100)).longValue();
+        long amountCents = learnerPaymentInfo.getAmount().multiply(new BigDecimal(100)).longValue();
         String transferId;
         if (stripeService.isTestMode()) {
             // Mock Transfer ID in test/demo mode
@@ -137,21 +137,30 @@ public class SessionService {
             );
             transferId = transfer.getId();
         }
-        info.setStripeTransferId(transferId);
+        learnerPaymentInfo.setStripeTransferId(transferId);
 
         // 5. Persist the updated payment info
-        paymentInfoDAO.updatePaymentInfo(info);
+        paymentInfoDAO.updatePaymentInfo(learnerPaymentInfo);
 
         // 6. Mark session as finished
         session.setSessionStatus(SessionStatus.FINISHED);
         session.setFinishedById(finisherId);
         Session updated = sessionDAO.updateSession(session);
 
+        PaymentInfo instructorPaymentInfo = new PaymentInfo();
+        instructorPaymentInfo.setUser(session.getInstructor());
+        instructorPaymentInfo.setCard(cardDAO.findCardByUserId(session.getInstructor().getId()));
+        instructorPaymentInfo.setPaymentDate(LocalDate.now());
+        instructorPaymentInfo.setAmount(session.getTransaction().getAmount());
+        instructorPaymentInfo.setStripeChargeId(learnerPaymentInfo.getStripeChargeId());
+
+        paymentInfoDAO.savePaymentInfo(instructorPaymentInfo);
+
         // 7. Notify instructor of the (mock) transfer
         notificationService.sendTransferNotification(
                 session.getInstructor(),
-                info.getAmount(),
-                info.getStripeChargeId()
+                instructorPaymentInfo.getAmount(),
+                instructorPaymentInfo.getStripeChargeId()
         );
 
         return convertToDTO(updated);

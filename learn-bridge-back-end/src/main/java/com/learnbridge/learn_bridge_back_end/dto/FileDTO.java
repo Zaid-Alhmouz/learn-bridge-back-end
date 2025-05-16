@@ -27,7 +27,7 @@ public class FileDTO {
         this.fileName = file.getFileName();
         this.fileType = file.getFileType();
         this.fileSize = file.getFileSize();
-        this.uploadedAt = LocalDateTime.now();
+        this.uploadedAt = file.getUploadDate();
         this.fileData = Base64.getEncoder().encodeToString(file.getFileData());
     }
 

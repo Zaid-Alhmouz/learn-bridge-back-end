@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class StripeService {
@@ -208,6 +209,22 @@ public class StripeService {
      */
     public PaymentMethod retrievePaymentMethod(String pmId) throws StripeException {
         return PaymentMethod.retrieve(pmId);
+    }
+
+    public String createOrMockRefund(String chargeId, String paymentIntentId) throws StripeException {
+        if (isTestMode()) {
+            // generate a predictable dummy ID
+            return "test_refund_" + UUID.randomUUID();
+        }
+        // live-mode: choose which param you have
+        RefundCreateParams.Builder params = RefundCreateParams.builder();
+        if (chargeId != null) {
+            params.setCharge(chargeId);
+        } else {
+            params.setPaymentIntent(paymentIntentId);
+        }
+        Refund refund = Refund.create(params.build());
+        return refund.getId();
     }
 
 }

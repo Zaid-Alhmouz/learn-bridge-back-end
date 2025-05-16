@@ -17,7 +17,7 @@ public class MessageDTO {
     public MessageDTO(TextMessage textMessage) {
         this.messageId = textMessage.getMessageId();
         this.senderId = textMessage.getSender().getId();
-        this.sentAt = LocalDateTime.now();
+        this.sentAt = textMessage.getSentAt();
         this.content = textMessage.getContent();
         this.senderName = textMessage.getSenderName();
     }

@@ -6,18 +6,27 @@ import com.learnbridge.learn_bridge_back_end.dto.UserDTO;
 import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.util.ReportMapper;
 import com.learnbridge.learn_bridge_back_end.util.UserMapper;
+import com.stripe.exception.StripeException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReportService {
 
     @Autowired
-    ReportDAO reportDAO;
+    private StripeService stripeService;
+
+    @Autowired
+    private ReportDAO reportDAO;
 
     @Autowired
     UserDAO userDAO;
@@ -36,6 +45,15 @@ public class ReportService {
 
     @Autowired
     ChatDAO chatDAO;
+
+    @Autowired
+    private CardDAO cardDAO;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private PaymentInfoDAO paymentInfoDAO;
 
     // get all pending reports for the admin
     public List<ReportDTO> getAllPendingReports()
@@ -63,17 +81,17 @@ public class ReportService {
         }
     }
 
-    // delete report by the admin
-    public ReportDTO deleteReport(Long reportId)
-    {
-        Report report = reportDAO.findReportByReportId(reportId);
-        if(report == null)
-        {
-            throw new RuntimeException("Report with id " + reportId + " not found");
-        }
-        reportDAO.deleteReport(reportId);
-        return ReportMapper.toReportDTO(report);
-    }
+//    // delete report by the admin
+//    public ReportDTO deleteReport(Long reportId)
+//    {
+//        Report report = reportDAO.findReportByReportId(reportId);
+//        if(report == null)
+//        {
+//            throw new RuntimeException("Report with id " + reportId + " not found");
+//        }
+//        reportDAO.deleteReport(reportId);
+//        return ReportMapper.toReportDTO(report);
+//    }
 
 
     // block user by admin
@@ -152,6 +170,122 @@ public class ReportService {
         reportDAO.saveReport(report);
 
         return ReportMapper.toReportDTO(report);
+    }
+
+
+    @Transactional
+    public void resolveBySessionId(Long sessionId) {
+        // fetch all reports on that session (usually just one pending)
+        List<Report> reports = reportDAO.findReportsBySessionId(sessionId);
+        for (Report r : reports) {
+            if (r.getReportStatus() == ReportStatus.PENDING) {
+                r.setReportStatus(ReportStatus.RESOLVED);
+                reportDAO.updateReport(r);
+            }
+        }
+    }
+
+
+
+    public Report findOrThrow(Long id) {
+        Report r = reportDAO.findReportByReportId(id);
+        if (r == null) throw new EntityNotFoundException("Report not found: " + id);
+        return r;
+    }
+
+    @Transactional
+    public void save(Report report) {
+        reportDAO.updateReport(report);
+    }
+
+    @Transactional
+    public ReportDTO deleteReport(Long id) {
+        Report r = findOrThrow(id);
+        ReportDTO dto = ReportMapper.toReportDTO(r);
+        reportDAO.deleteReport(id);
+        return dto;
+    }
+
+    public ReportDTO toDTO(Report r) {
+        return ReportMapper.toReportDTO(r);
+    }
+
+
+    @Transactional
+    public ReportDTO transferOrMock(Long reportId) throws StripeException {
+        Report r = findOrThrow(reportId);
+
+        PaymentInfo info = r.getSession().getTransaction();
+        Session session = sessionDAO.findSessionById(r.getSession().getSessionId());
+        long cents = info.getAmount().multiply(new BigDecimal(100)).longValue();
+        String currency = "usd";  // or pull from your DTO
+
+        // mock if test-mode, otherwise real transfer
+        String transferId;
+        if (stripeService.isTestMode()) {
+            transferId = "test_xfer_" + UUID.randomUUID();
+        } else {
+            Instructor inst = instructorDAO.findInstructorById(r.getSession().getInstructor().getId());
+            String destAcct = inst.getStripeAccountId();
+            transferId = stripeService.transferToInstructor(cents, currency, destAcct).getId();
+        }
+
+        // persist the dummy/real transfer ID
+        info.setStripeTransferId(transferId);
+        r.setReportStatus(ReportStatus.RESOLVED);
+        reportDAO.updateReport(r);
+
+        PaymentInfo instructorPaymentInfo = new PaymentInfo();
+        instructorPaymentInfo.setUser(session.getInstructor());
+        instructorPaymentInfo.setCard(cardDAO.findCardByUserId(session.getInstructor().getId()));
+        instructorPaymentInfo.setPaymentDate(LocalDate.now());
+        instructorPaymentInfo.setAmount(session.getTransaction().getAmount());
+        instructorPaymentInfo.setStripeChargeId(session.getTransaction().getStripeChargeId());
+
+        paymentInfoDAO.savePaymentInfo(instructorPaymentInfo);
+
+
+
+        // send transfer notification to instructor
+        notificationService.sendTransferNotification(
+                r.getSession().getInstructor(),
+                info.getAmount(),
+                transferId   // or info.getStripeTransferId()
+        );
+
+        // return updated DTO
+        return toDTO(r);
+    }
+
+
+
+    @Transactional
+    public Report refundOrMock(Long reportId) throws StripeException {
+        Report report = findOrThrow(reportId);
+        PaymentInfo info = report.getSession().getTransaction();
+
+        // 1) mock or real refund
+        String refundId;
+        if (stripeService.isTestMode()) {
+            refundId = "test_refund_" + UUID.randomUUID();
+        } else if (info.getStripeChargeId() != null) {
+            // real refund against a Charge
+            refundId = stripeService.refundPayment(info.getStripeChargeId(), null).getId();
+        } else {
+            // real cancel of an authorization
+            stripeService.cancelAuthorization(info.getStripePaymentIntentId());
+            refundId = null; // or some sentinel
+        }
+
+        // 2) persist the refund ID (if any)
+        info.setStripeRefundId(refundId);
+        paymentInfoDAO.updatePaymentInfo(info);
+
+        // 3) mark and persist the report
+        report.setReportStatus(ReportStatus.RESOLVED);
+        reportDAO.updateReport(report);
+
+        return report;
     }
 }
 
