@@ -277,13 +277,24 @@ public class ReportService {
             refundId = null; // or some sentinel
         }
 
-        // 2) persist the refund ID (if any)
+        // persist the refund ID (if any) (learner)
         info.setStripeRefundId(refundId);
         paymentInfoDAO.updatePaymentInfo(info);
 
-        // 3) mark and persist the report
+        // create payment info for instructor
+        PaymentInfo instructorPaymentInfo = new PaymentInfo();
+        instructorPaymentInfo.setUser(report.getSession().getInstructor());
+        instructorPaymentInfo.setCard(cardDAO.findCardByUserId(report.getSession().getInstructor().getId()));
+        instructorPaymentInfo.setPaymentDate(LocalDate.now());
+        instructorPaymentInfo.setAmount(report.getSession().getTransaction().getAmount());
+        instructorPaymentInfo.setStripeChargeId(report.getSession().getTransaction().getStripeChargeId());
+        paymentInfoDAO.savePaymentInfo(instructorPaymentInfo);
+
+        // mark and persist the report
         report.setReportStatus(ReportStatus.RESOLVED);
         reportDAO.updateReport(report);
+
+
 
         return report;
     }

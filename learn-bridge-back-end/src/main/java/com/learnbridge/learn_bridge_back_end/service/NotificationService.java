@@ -191,7 +191,7 @@ public class NotificationService {
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
-                "$%s has been transferred to your account.", amount
+                "%sJOD has been transferred to your account.", amount
         ));
         return notificationsDAO.saveNotification(notification);
     }
