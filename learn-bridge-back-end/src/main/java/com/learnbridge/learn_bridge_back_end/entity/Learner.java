@@ -26,7 +26,8 @@ public class Learner {
     @Column(name = "favourite_category")
     private String favouriteCategory;
 
-    @Column(name = "personal_image")
+    @Lob
+    @Column(name = "personal_image", columnDefinition = "MEDIUMBLOB")
     private byte[] personalImage;
 
     @Column(name = "stripe_account_id", length = 255, unique = true)

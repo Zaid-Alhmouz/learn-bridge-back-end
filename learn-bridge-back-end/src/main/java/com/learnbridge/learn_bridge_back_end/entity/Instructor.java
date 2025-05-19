@@ -33,7 +33,8 @@ public class Instructor {
     @Column(name = "university_info")
     private String universityInfo;
 
-    @Column(name = "instructor_image")
+    @Lob
+    @Column(name = "instructor_image", columnDefinition = "MEDIUMBLOB")
     private byte[] instructorImage;
 
     @Column(name = "favourite_category")

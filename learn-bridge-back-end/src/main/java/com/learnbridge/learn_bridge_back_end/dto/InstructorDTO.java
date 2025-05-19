@@ -18,6 +18,7 @@ public class InstructorDTO {
     private Integer numberOfSessions;
     private Integer numberOfReviews;
     private Double ratingAvg;
+    private String personalImage;
 
 
 
@@ -139,6 +140,14 @@ public class InstructorDTO {
         this.ratingAvg = ratingAvg;
     }
 
+    public String getPersonalImage() {
+        return personalImage;
+    }
+
+    public void setPersonalImage(String personalImage) {
+        this.personalImage = personalImage;
+    }
+
     @Override
     public String toString() {
         return "InstructorDTO{" +
@@ -152,6 +161,7 @@ public class InstructorDTO {
                 ", numberOfSessions=" + numberOfSessions +
                 ", numberOfReviews=" + numberOfReviews +
                 ", ratingAvg=" + ratingAvg +
+                ", personalImage='" + personalImage + '\'' +
                 '}';
     }
 }

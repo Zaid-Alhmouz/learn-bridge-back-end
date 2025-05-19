@@ -16,7 +16,7 @@ public class PersonalInfoDTO {
     private String universityInfo;
     private String bio;
     private BigDecimal avgPrice;
-    private byte[] personalImage;
+    private String personalImage;
 
 
     public String getFirstName() {
@@ -83,11 +83,11 @@ public class PersonalInfoDTO {
         this.avgPrice = avgPrice;
     }
 
-    public byte[] getPersonalImage() {
+    public String getPersonalImage() {
         return personalImage;
     }
 
-    public void setPersonalImage(byte[] personalImage) {
+    public void setPersonalImage(String personalImage) {
         this.personalImage = personalImage;
     }
 
@@ -111,7 +111,7 @@ public class PersonalInfoDTO {
                 ", universityInfo='" + universityInfo + '\'' +
                 ", bio='" + bio + '\'' +
                 ", avgPrice=" + avgPrice +
-                ", personalImage=" + Arrays.toString(personalImage) +
+                ", personalImage='" + personalImage + '\'' +
                 '}';
     }
 }

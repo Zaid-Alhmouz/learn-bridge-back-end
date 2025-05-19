@@ -26,7 +26,7 @@ public class Notifications {
     private ReadStatus readStatus;
 
     @Column(name = "notification_type")
-    private String notificationType;
+    private NotificationType notificationType;
 
     @Column(name = "time_stamp")
     private LocalDateTime timestamp;
@@ -61,11 +61,11 @@ public class Notifications {
         this.readStatus = readStatus;
     }
 
-    public String getNotificationType() {
+    public NotificationType getNotificationType() {
         return notificationType;
     }
 
-    public void setNotificationType(String notificationType) {
+    public void setNotificationType(NotificationType notificationType) {
         this.notificationType = notificationType;
     }
 

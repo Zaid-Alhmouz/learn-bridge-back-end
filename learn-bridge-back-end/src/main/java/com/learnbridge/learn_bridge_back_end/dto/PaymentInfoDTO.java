@@ -12,6 +12,8 @@ public class PaymentInfoDTO {
     private String cardNumber;
     private LocalDate paymentDate;
     private BigDecimal amount;
+    private String senderName;
+    private String receiverName;
 
     public PaymentInfoDTO() {}
 
@@ -21,6 +23,8 @@ public class PaymentInfoDTO {
         this.cardNumber = paymentInfo.getCard().getCardNumber();
         this.paymentDate = paymentInfo.getPaymentDate();
         this.amount = paymentInfo.getAmount();
+        this.senderName = paymentInfo.getSenderName();
+        this.receiverName = paymentInfo.getReceiverName();
     }
 
 
@@ -64,6 +68,21 @@ public class PaymentInfoDTO {
         this.amount = amount;
     }
 
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
 
     @Override
     public String toString() {
@@ -73,6 +92,8 @@ public class PaymentInfoDTO {
                 ", cardNumber='" + cardNumber + '\'' +
                 ", paymentDate=" + paymentDate +
                 ", amount=" + amount +
+                ", senderName='" + senderName + '\'' +
+                ", receiverName='" + receiverName + '\'' +
                 '}';
     }
 }

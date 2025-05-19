@@ -1,5 +1,7 @@
 package com.learnbridge.learn_bridge_back_end.dto;
 
+import com.learnbridge.learn_bridge_back_end.entity.NotificationType;
+
 import java.time.LocalDateTime;
 
 public class NotificationDTO {
@@ -7,7 +9,7 @@ public class NotificationDTO {
     private Long notificationId;
     private Long userId;
     private Long agreementId;
-    private String notificationType;
+    private NotificationType notificationType;
     private String readStatus;
     private LocalDateTime timestamp;
     private String message;
@@ -38,11 +40,11 @@ public class NotificationDTO {
         this.agreementId = agreementId;
     }
 
-    public String getNotificationType() {
+    public NotificationType getNotificationType() {
         return notificationType;
     }
 
-    public void setNotificationType(String notificationType) {
+    public void setNotificationType(NotificationType notificationType) {
         this.notificationType = notificationType;
     }
 

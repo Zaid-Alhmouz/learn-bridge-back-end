@@ -264,15 +264,15 @@ public class ReportService {
         Report report = findOrThrow(reportId);
         PaymentInfo info = report.getSession().getTransaction();
 
-        // 1) mock or real refund
+
         String refundId;
         if (stripeService.isTestMode()) {
             refundId = "test_refund_" + UUID.randomUUID();
         } else if (info.getStripeChargeId() != null) {
-            // real refund against a Charge
+
             refundId = stripeService.refundPayment(info.getStripeChargeId(), null).getId();
         } else {
-            // real cancel of an authorization
+
             stripeService.cancelAuthorization(info.getStripePaymentIntentId());
             refundId = null; // or some sentinel
         }
@@ -289,6 +289,7 @@ public class ReportService {
         instructorPaymentInfo.setAmount(report.getSession().getTransaction().getAmount());
         instructorPaymentInfo.setStripeChargeId(report.getSession().getTransaction().getStripeChargeId());
         paymentInfoDAO.savePaymentInfo(instructorPaymentInfo);
+
 
         // mark and persist the report
         report.setReportStatus(ReportStatus.RESOLVED);

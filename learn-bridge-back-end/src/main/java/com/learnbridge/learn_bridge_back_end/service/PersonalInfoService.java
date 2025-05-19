@@ -9,13 +9,11 @@ import com.learnbridge.learn_bridge_back_end.entity.Learner;
 import com.learnbridge.learn_bridge_back_end.entity.User;
 import com.learnbridge.learn_bridge_back_end.entity.UserRole;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PersonalInfoService {
@@ -24,110 +22,136 @@ public class PersonalInfoService {
     private UserDAO userDAO;
 
     @Autowired
-    private InstructorDAO instructorDAO;
-
-    @Autowired
     private LearnerDAO learnerDAO;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // make sure this is properly configured
+    private InstructorDAO instructorDAO;
 
-    public void editPersonalInfo(PersonalInfoDTO personalInfoDTO, SecurityUser loggedUser) {
-        // Retrieve the current user from the database
-        Long userId = loggedUser.getUser().getId();
-        User existingUser = userDAO.findUserById(userId);
-        if (existingUser == null) {
-            throw new RuntimeException("User not found for id: " + userId);
-        }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-        // Optionally, check if email changed and if new email is already taken
-        if (!existingUser.getEmail().equals(personalInfoDTO.getEmail())) {
-            User userWithNewEmail = userDAO.findUserByEmail(personalInfoDTO.getEmail());
-            if (userWithNewEmail != null) {
-                throw new RuntimeException("The email is already in use by another account.");
-            }
-            existingUser.setEmail(personalInfoDTO.getEmail());
-        }
-
-        // Update other user fields with new values from the DTO.
-        existingUser.setFirstName(personalInfoDTO.getFirstName());
-        existingUser.setLastName(personalInfoDTO.getLastName());
-        // Update password only if a new one is provided (and encode it)
-        if (personalInfoDTO.getPassword() != null && !personalInfoDTO.getPassword().isEmpty()) {
-            String encodedPassword = passwordEncoder.encode(personalInfoDTO.getPassword());
-            existingUser.setPassword(encodedPassword);
-        }
-
-        // Save the updated user info
-        userDAO.updateUser(existingUser);
-
-        // Depending on the user's role, update Learner or Instructor details:
-        if (existingUser.getUserRole() == UserRole.LEARNER) {
-            Learner existingLearner = learnerDAO.findLearnerById(userId);
-            if (existingLearner == null) {
-                throw new RuntimeException("Learner not found for user id: " + userId);
-            }
-            existingLearner.setFirstName(personalInfoDTO.getFirstName());
-            existingLearner.setLastName(personalInfoDTO.getLastName());
-            existingLearner.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
-            existingLearner.setPersonalImage(personalInfoDTO.getPersonalImage());
-            // Update other learner-specific fields, if any
-            learnerDAO.updateLearner(existingLearner);
-        } else if (existingUser.getUserRole() == UserRole.INSTRUCTOR) {
-            Instructor existingInstructor = instructorDAO.findInstructorById(userId);
-            if (existingInstructor == null) {
-                throw new RuntimeException("Instructor not found for user id: " + userId);
-            }
-            existingInstructor.setFirstName(personalInfoDTO.getFirstName());
-            existingInstructor.setLastName(personalInfoDTO.getLastName());
-            existingInstructor.setFavouriteCategory(personalInfoDTO.getFavouriteCategory());
-            existingInstructor.setUniversityInfo(personalInfoDTO.getUniversityInfo());
-            existingInstructor.setInstructorBio(personalInfoDTO.getBio());
-            existingInstructor.setAvgPrice(personalInfoDTO.getAvgPrice());
-            existingInstructor.setInstructorImage(personalInfoDTO.getPersonalImage());
-            instructorDAO.updateInstructor(existingInstructor);
-        }
-    }
-
+    /**
+     * Fetches all personal info fields; converts stored byte[] → Base64 data-URI.
+     */
     public PersonalInfoDTO getPersonalInfo(Long userId) {
         User user = userDAO.findUserById(userId);
-        PersonalInfoDTO personalInfoDTO = new PersonalInfoDTO();
-        if (user == null) {
-            throw new RuntimeException("User not found for id: " + userId);
-        }
+        if (user == null) throw new RuntimeException("User not found: " + userId);
+
+        PersonalInfoDTO dto = new PersonalInfoDTO();
+        dto.setUserRole(user.getUserRole());
+        dto.setEmail(user.getEmail());
+        // Password not sent back
+        dto.setPassword(null);
 
         if (user.getUserRole() == UserRole.LEARNER) {
             Learner learner = learnerDAO.findLearnerById(userId);
-            if (learner == null) {
-                throw new RuntimeException("Learner not found for user id: " + userId);
-            }
+            if (learner == null) throw new RuntimeException("Learner not found: " + userId);
+            dto.setFirstName(learner.getFirstName());
+            dto.setLastName(learner.getLastName());
+            dto.setFavouriteCategory(learner.getFavouriteCategory());
+            dto.setUniversityInfo(null);
+            dto.setBio(null);
+            dto.setAvgPrice(null);
 
-            personalInfoDTO.setFirstName(learner.getFirstName());
-            personalInfoDTO.setLastName(learner.getLastName());
-            personalInfoDTO.setPersonalImage(learner.getPersonalImage());
-            personalInfoDTO.setFavouriteCategory(learner.getFavouriteCategory());
-            personalInfoDTO.setEmail(user.getEmail());
-            personalInfoDTO.setUniversityInfo(" ");
-            personalInfoDTO.setBio(" ");
-            personalInfoDTO.setAvgPrice(null);
-            personalInfoDTO.setUserRole(user.getUserRole());
+            byte[] img = learner.getPersonalImage();
+            dto.setPersonalImage(img != null && img.length > 0
+                    ? "data:image/jpeg;base64," + Base64.encodeBase64String(img)
+                    : null
+            );
         }
         else if (user.getUserRole() == UserRole.INSTRUCTOR) {
-            Instructor instructor = instructorDAO.findInstructorById(userId);
-            if (instructor == null) {
-                throw new RuntimeException("Instructor not found for user id: " + userId);
-            }
-            personalInfoDTO.setFirstName(instructor.getFirstName());
-            personalInfoDTO.setLastName(instructor.getLastName());
-            personalInfoDTO.setFavouriteCategory(instructor.getFavouriteCategory());
-            personalInfoDTO.setUniversityInfo(instructor.getUniversityInfo());
-            personalInfoDTO.setBio(instructor.getInstructorBio());
-            personalInfoDTO.setAvgPrice(instructor.getAvgPrice());
-            personalInfoDTO.setUserRole(user.getUserRole());
-            personalInfoDTO.setPersonalImage(instructor.getInstructorImage());
-            personalInfoDTO.setEmail(user.getEmail());
+            Instructor inst = instructorDAO.findInstructorById(userId);
+            if (inst == null) throw new RuntimeException("Instructor not found: " + userId);
+            dto.setFirstName(inst.getFirstName());
+            dto.setLastName(inst.getLastName());
+            dto.setFavouriteCategory(inst.getFavouriteCategory());
+            dto.setUniversityInfo(inst.getUniversityInfo());
+            dto.setBio(inst.getInstructorBio());
+            dto.setAvgPrice(inst.getAvgPrice());
+
+            byte[] img = inst.getInstructorImage();
+            dto.setPersonalImage(img != null && img.length > 0
+                    ? "data:image/jpeg;base64," + Base64.encodeBase64String(img)
+                    : null
+            );
         }
 
-        return personalInfoDTO;
+        return dto;
+    }
+
+    /**
+     * Stores an uploaded profile image (MultipartFile → byte[]) and returns
+     * a Base64 data-URI for immediate front-end preview.
+     */
+    public String storeProfileImage(Long userId, MultipartFile file) {
+        User user = userDAO.findUserById(userId);
+        if (user == null) throw new RuntimeException("User not found: " + userId);
+
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read image file", e);
+        }
+
+        String dataUri = "data:" + file.getContentType() + ";base64,"
+                + Base64.encodeBase64String(bytes);
+
+        if (user.getUserRole() == UserRole.LEARNER) {
+            Learner learner = learnerDAO.findLearnerById(userId);
+            if (learner == null) throw new RuntimeException("Learner not found: " + userId);
+            learner.setPersonalImage(bytes);
+            learnerDAO.updateLearner(learner);
+        } else {
+            Instructor inst = instructorDAO.findInstructorById(userId);
+            if (inst == null) throw new RuntimeException("Instructor not found: " + userId);
+            inst.setInstructorImage(bytes);
+            instructorDAO.updateInstructor(inst);
+        }
+
+        return dataUri;
+    }
+
+    /**
+     * Updates textual personal info fields. Image bytes are handled
+     * separately via storeProfileImage().
+     */
+    public void editPersonalInfo(PersonalInfoDTO dto, SecurityUser loggedUser) {
+        Long userId = loggedUser.getUser().getId();
+        User user = userDAO.findUserById(userId);
+        if (user == null) throw new RuntimeException("User not found: " + userId);
+
+        // Email uniqueness check
+        if (!user.getEmail().equals(dto.getEmail())) {
+            User other = userDAO.findUserByEmail(dto.getEmail());
+            if (other != null) {
+                throw new RuntimeException("Email already in use");
+            }
+            user.setEmail(dto.getEmail());
+        }
+
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        userDAO.updateUser(user);
+
+        if (user.getUserRole() == UserRole.LEARNER) {
+            Learner learner = learnerDAO.findLearnerById(userId);
+            learner.setFirstName(dto.getFirstName());
+            learner.setLastName(dto.getLastName());
+            learner.setFavouriteCategory(dto.getFavouriteCategory());
+            learnerDAO.updateLearner(learner);
+        } else {
+            Instructor inst = instructorDAO.findInstructorById(userId);
+            inst.setFirstName(dto.getFirstName());
+            inst.setLastName(dto.getLastName());
+            inst.setFavouriteCategory(dto.getFavouriteCategory());
+            inst.setUniversityInfo(dto.getUniversityInfo());
+            inst.setInstructorBio(dto.getBio());
+            inst.setAvgPrice(dto.getAvgPrice());
+            instructorDAO.updateInstructor(inst);
+        }
     }
 }

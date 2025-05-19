@@ -27,7 +27,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getLearner().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("AGREEMENT_REQUEST");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -47,7 +47,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getInstructor().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("LEARNER_REQUEST");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -67,7 +67,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getInstructor().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("AGREEMENT_ACCEPTED");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -87,7 +87,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getInstructor().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("AGREEMENT_REJECTED");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -107,7 +107,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getLearner().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("LEARNER_REQUEST_ACCEPTED");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -126,7 +126,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setUser(agreement.getLearner().getUser());
         notification.setAgreement(agreement);
-        notification.setNotificationType("LEARNER_REQUEST_REJECTED");
+        notification.setNotificationType(NotificationType.AGREEMENT);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -174,7 +174,7 @@ public class NotificationService {
     public Notifications sendHoldNotification(User learner, BigDecimal amount, String paymentIntentId) {
         Notifications notification = new Notifications();
         notification.setUser(learner);
-        notification.setNotificationType("PAYMENT_HELD");
+        notification.setNotificationType(NotificationType.TRANSACTION);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -187,7 +187,7 @@ public class NotificationService {
     public Notifications sendTransferNotification(User instructor, BigDecimal amount, String chargeId) {
         Notifications notification = new Notifications();
         notification.setUser(instructor);
-        notification.setNotificationType("FUNDS_TRANSFERRED");
+        notification.setNotificationType(NotificationType.TRANSACTION);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -200,7 +200,7 @@ public class NotificationService {
     public Notifications sendRefundNotification(User learner, BigDecimal amount, String refundId) {
         Notifications notification = new Notifications();
         notification.setUser(learner);
-        notification.setNotificationType("REFUND_ISSUED");
+        notification.setNotificationType(NotificationType.TRANSACTION);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -213,7 +213,7 @@ public class NotificationService {
     public Notifications sendCancelNotification(User learner, BigDecimal amount, String paymentIntentId) {
         Notifications notification = new Notifications();
         notification.setUser(learner);
-        notification.setNotificationType("PAYMENT_RELEASED");
+        notification.setNotificationType(NotificationType.TRANSACTION);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -227,7 +227,7 @@ public class NotificationService {
 
         Notifications notification = new Notifications();
         notification.setUser(learner);
-        notification.setNotificationType("POST_ACCEPTED");
+        notification.setNotificationType(NotificationType.POST);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -240,7 +240,7 @@ public class NotificationService {
     public Notifications sendRejectPostNotification(User learner) {
         Notifications notification = new Notifications();
         notification.setUser(learner);
-        notification.setNotificationType("POST_REJECTED");
+        notification.setNotificationType(NotificationType.POST);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(
@@ -270,7 +270,7 @@ public class NotificationService {
                                                      String refundId) {
         Notifications notification = new Notifications();
         notification.setUser(instructor);
-        notification.setNotificationType("REFUND_TAKEN");
+        notification.setNotificationType(NotificationType.TRANSACTION);
         notification.setReadStatus(ReadStatus.UNREAD);
         notification.setTimestamp(LocalDateTime.now());
         notification.setMessage(String.format(

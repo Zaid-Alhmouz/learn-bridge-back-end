@@ -57,6 +57,8 @@ public class SessionService {
         info.setPaymentDate(LocalDate.now());
         info.setAmount(agreement.getPrice());
         info.setStripePaymentIntentId(pi.getId());
+        info.setSenderName(agreement.getLearner().getFirstName() + " " + agreement.getLearner().getLastName());
+        info.setReceiverName(agreement.getInstructor().getFirstName() + " " + agreement.getInstructor().getLastName());
         paymentInfoDAO.savePaymentInfo(info);
 
         // Create session
@@ -98,18 +100,18 @@ public class SessionService {
      */
     @Transactional
     public SessionDTO finishSession(Long sessionId, Long finisherId) throws StripeException {
-        // 1. Load session
+        //  Load session
         Session session = sessionDAO.findSessionById(sessionId);
         if (session == null) {
             throw new IllegalArgumentException("Session not found: " + sessionId);
         }
 
-        // 2. Capture the authorized payment
+
         PaymentInfo learnerPaymentInfo = session.getTransaction();
         PaymentIntent captured = stripeService.capturePayment(learnerPaymentInfo.getStripePaymentIntentId());
         learnerPaymentInfo.setCaptured(true);
 
-        // 3. Retrieve and save the latest Charge ID
+
         String latestChargeId = captured.getLatestCharge();
         if (latestChargeId != null) {
             Charge charge = Charge.retrieve(latestChargeId);
@@ -122,10 +124,10 @@ public class SessionService {
         long amountCents = learnerPaymentInfo.getAmount().multiply(new BigDecimal(100)).longValue();
         String transferId;
         if (stripeService.isTestMode()) {
-            // Mock Transfer ID in test/demo mode
+
             transferId = "test_xfer_" + UUID.randomUUID();
         } else {
-            // Real transfer in live mode
+
             String instructorAccount = session
                     .getAgreement()
                     .getInstructor()
@@ -139,10 +141,10 @@ public class SessionService {
         }
         learnerPaymentInfo.setStripeTransferId(transferId);
 
-        // 5. Persist the updated payment info
+
         paymentInfoDAO.updatePaymentInfo(learnerPaymentInfo);
 
-        // 6. Mark session as finished
+
         session.setSessionStatus(SessionStatus.FINISHED);
         session.setFinishedById(finisherId);
         Session updated = sessionDAO.updateSession(session);
@@ -153,10 +155,12 @@ public class SessionService {
         instructorPaymentInfo.setPaymentDate(LocalDate.now());
         instructorPaymentInfo.setAmount(session.getTransaction().getAmount());
         instructorPaymentInfo.setStripeChargeId(learnerPaymentInfo.getStripeChargeId());
+        instructorPaymentInfo.setSenderName(session.getTransaction().getSenderName());
+        instructorPaymentInfo.setReceiverName(session.getTransaction().getReceiverName());
 
         paymentInfoDAO.savePaymentInfo(instructorPaymentInfo);
 
-        // 7. Notify instructor of the (mock) transfer
+
         notificationService.sendTransferNotification(
                 session.getInstructor(),
                 instructorPaymentInfo.getAmount(),
@@ -185,6 +189,16 @@ public class SessionService {
         session.setSessionStatus(SessionStatus.CANCELLED);
         session.setCancelledById(cancellerId);
         Session updated = sessionDAO.updateSession(session);
+
+        PaymentInfo learnerPaymentInfo = new PaymentInfo();
+        learnerPaymentInfo.setUser(session.getInstructor());
+        learnerPaymentInfo.setCard(cardDAO.findCardByUserId(session.getInstructor().getId()));
+        learnerPaymentInfo.setPaymentDate(LocalDate.now());
+        learnerPaymentInfo.setAmount(session.getTransaction().getAmount());
+        learnerPaymentInfo.setStripeChargeId(learnerPaymentInfo.getStripeChargeId());
+        learnerPaymentInfo.setSenderName(session.getTransaction().getReceiverName());
+        learnerPaymentInfo.setReceiverName(session.getTransaction().getSenderName());
+        paymentInfoDAO.savePaymentInfo(learnerPaymentInfo);
 
         notificationService.sendCancelNotification(
                 session.getAgreement().getLearner().getUser(), info.getAmount(), info.getStripePaymentIntentId()
@@ -253,6 +267,8 @@ public class SessionService {
         info.setPaymentDate(LocalDate.now());
         info.setAmount(price);
         info.setStripePaymentIntentId(pi.getId());
+        info.setSenderName(ag.getLearner().getFirstName() + " " + ag.getLearner().getLastName());
+        info.setReceiverName(ag.getInstructor().getFirstName() + " " + ag.getLearner().getLastName());
         paymentInfoDAO.savePaymentInfo(info);
 
         // 6. Notify learner of hold

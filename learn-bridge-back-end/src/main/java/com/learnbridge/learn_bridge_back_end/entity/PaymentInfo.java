@@ -17,6 +17,12 @@ public class PaymentInfo {
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
+    @Column(name = "sender_name")
+    private String senderName;
+
+    @Column(name = "receiver_name")
+    private String receiverName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "card_id", referencedColumnName = "card_id")
     private Card card;
@@ -123,11 +129,29 @@ public class PaymentInfo {
         this.refunded = refunded;
     }
 
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
     @Override
     public String toString() {
         return "PaymentInfo{" +
                 "transactionId=" + transactionId +
                 ", user=" + user +
+                ", senderName='" + senderName + '\'' +
+                ", receiverName='" + receiverName + '\'' +
                 ", card=" + card +
                 ", paymentDate=" + paymentDate +
                 ", amount=" + amount +
