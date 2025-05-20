@@ -19,6 +19,8 @@ public class PostDTO {
     private PostStatus postStatus;
     private String category;
     private LocalDate sessionDeadline;
+    private String authorImage;
+
 
     public PostDTO() {}
 
@@ -117,6 +119,14 @@ public class PostDTO {
 
     public void setSessionDeadline(LocalDate sessionDeadline) {
         this.sessionDeadline = sessionDeadline;
+    }
+
+    public String getAuthorImage() {
+        return authorImage;
+    }
+
+    public void setAuthorImage(String authorImage) {
+        this.authorImage = authorImage;
     }
 
     @Override

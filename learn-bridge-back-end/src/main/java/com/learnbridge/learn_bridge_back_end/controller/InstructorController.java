@@ -65,12 +65,15 @@ public class InstructorController {
 
     // retrieve instructor profile info
     @GetMapping("/profile/{instructorId}")
-    public ResponseEntity<InstructorDTO> getInstructorProfile(@PathVariable Long instructorId) {
-        return statsRepo.findStatsById(instructorId)
-                .map(dto -> ResponseEntity.ok(dto))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<InstructorDTO> getInstructorProfile(
+            @PathVariable Long instructorId) {
+        try {
+            InstructorDTO dto = findInstructorService.viewProfile(instructorId);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
-
 
     @GetMapping("/view-profile/{instructorId}/reviews")
     public ResponseEntity<List<ReviewSummaryDTO>> getInstructorReviews(

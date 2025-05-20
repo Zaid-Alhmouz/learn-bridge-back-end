@@ -2,12 +2,10 @@ package com.learnbridge.learn_bridge_back_end.controller;
 
 
 import com.learnbridge.learn_bridge_back_end.dao.InstructorDAO;
+import com.learnbridge.learn_bridge_back_end.dao.LearnerDAO;
 import com.learnbridge.learn_bridge_back_end.dto.CreatePostRequest;
 import com.learnbridge.learn_bridge_back_end.dto.PostDTO;
-import com.learnbridge.learn_bridge_back_end.entity.Instructor;
-import com.learnbridge.learn_bridge_back_end.entity.Post;
-import com.learnbridge.learn_bridge_back_end.entity.PostId;
-import com.learnbridge.learn_bridge_back_end.entity.PostStatus;
+import com.learnbridge.learn_bridge_back_end.entity.*;
 import com.learnbridge.learn_bridge_back_end.security.SecurityUser;
 import com.learnbridge.learn_bridge_back_end.service.PostService;
 import com.learnbridge.learn_bridge_back_end.util.PostMapper;
@@ -20,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -34,6 +33,9 @@ public class PostController {
 
     @Autowired
     private InstructorDAO instructorDAO;
+
+    @Autowired
+    private LearnerDAO learnerDAO;
 
     @PostMapping("/create-post")
     public ResponseEntity<?> createPost(@RequestBody CreatePostRequest postRequest, @AuthenticationPrincipal SecurityUser securityUser) {
@@ -62,36 +64,36 @@ public class PostController {
     }
 
     @GetMapping("/favourite-category")
-    public ResponseEntity<List<PostDTO>> getFavouriteCategoryPosts(@AuthenticationPrincipal SecurityUser loggedUser) {
-
-        Long userId = loggedUser.getUser().getId();
-        
-
-        Instructor instructor = instructorDAO.findInstructorById(userId);
-
-        String favouriteCategory = instructor.getFavouriteCategory();
-
-        List<PostDTO> favouriteCategoryPosts = postService.getPostsByFavouriteCategory(userId, favouriteCategory);
-
-        if(favouriteCategoryPosts == null || favouriteCategoryPosts.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        else{
-            return ResponseEntity.ok(favouriteCategoryPosts);
-        }
+    public ResponseEntity<List<PostDTO>> getPostsByFavoriteCategory(
+            @AuthenticationPrincipal SecurityUser user) {
+        Long id = user.getUser().getId();
+        List<PostDTO> list = postService.getPostsByFavouriteCategory(id,
+                instructorDAO.findInstructorById(id).getFavouriteCategory());
+        if (list.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/selected-category/{selectedCategory}")
-    public ResponseEntity<List<PostDTO>> getFavouriteCategoryPosts(@PathVariable String selectedCategory) {
-        
-        List<PostDTO> favouriteCategoryPosts = postService.getPostsBySelectedCategory(selectedCategory);
+    public ResponseEntity<List<PostDTO>> getFavouriteCategoryPosts(
+            @PathVariable String selectedCategory) {
 
-        if(favouriteCategoryPosts == null || favouriteCategoryPosts.isEmpty()){
+        List<PostDTO> posts = postService.getPostsBySelectedCategory(selectedCategory);
+        if (posts == null || posts.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        else{
-            return ResponseEntity.ok(favouriteCategoryPosts);
+
+        // Encode and set the authorImage on each DTO
+        for (PostDTO dto : posts) {
+            Learner author = learnerDAO.findLearnerById(dto.getAuthorId());
+            byte[] imgBytes = (author != null) ? author.getPersonalImage() : null;
+            if (imgBytes != null && imgBytes.length > 0) {
+                String b64 = Base64.getEncoder().encodeToString(imgBytes);
+                // prepend data URI header so the front end can bind directly to <img src=…>
+                dto.setAuthorImage("data:image/jpeg;base64," + b64);
+            }
         }
+
+        return ResponseEntity.ok(posts);
     }
 
 
@@ -144,6 +146,8 @@ public class PostController {
             return ResponseEntity.ok(acceptedPost);
     }
 
+
+
     @PutMapping("/reject/{authorId}/{postId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PostDTO> rejectPendingPost(
@@ -162,14 +166,14 @@ public class PostController {
             return ResponseEntity.ok(rejectedPost);
     }
 
+
+
     @GetMapping("/all-posts")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<PostDTO>> getAllPosts(@AuthenticationPrincipal SecurityUser loggedUser) {
-        List<PostDTO> allPosts = postService.getAllPosts();
-        if(allPosts == null || allPosts.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(allPosts);
+    public ResponseEntity<List<PostDTO>> getAllPosts() {
+        List<PostDTO> list = postService.getAllPosts();
+        if (list.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(list);
     }
 
 

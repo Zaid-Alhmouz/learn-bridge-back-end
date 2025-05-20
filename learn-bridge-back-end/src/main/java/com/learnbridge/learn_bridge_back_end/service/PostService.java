@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -74,10 +75,22 @@ public class PostService {
     // get all posts with not caring for FavouriteCategory
     public List<PostDTO> getAllPosts() {
         List<Post> posts = postDAO.findApprovedPosts();
-        if (posts.isEmpty()) {
-            return new ArrayList<>();
+        if (posts.isEmpty()) return List.of();
+
+        // map entities to DTOs (no images yet)
+        List<PostDTO> dtos = PostMapper.toDTOList(posts);
+
+        // for each DTO, fetch the Learner entity to grab the byte[] and Base64‐encode it
+        for (PostDTO dto : dtos) {
+            Learner author = learnerDAO.findLearnerById(dto.getAuthorId());
+            byte[] img = author.getPersonalImage();
+            if (img != null && img.length > 0) {
+                String b64 = Base64.getEncoder().encodeToString(img);
+                // prepend the data-URL header so the front-end can bind directly to <img src=…>
+                dto.setAuthorImage("data:image/jpeg;base64," + b64);
+            }
         }
-        return PostMapper.toDTOList(posts);
+        return dtos;
     }
 
     // retrieves posts created by a given author (learner)
@@ -89,14 +102,19 @@ public class PostService {
         return PostMapper.toDTOList(posts);
     }
 
-    // for default posts to be retrieved when the instructor navigates to the posts page, retrieves all posts that suits his favourite category.
-    public List<PostDTO> getPostsByFavouriteCategory(Long authorId, String category) {
-        List<Post> posts = postDAO.findAllPostsByFavouriteCategory(category);
-        if (posts == null || posts.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return PostMapper.toDTOList(posts);
+    public List<PostDTO> getPostsByFavouriteCategory(Long userId, String cat) {
+        List<PostDTO> dtos = PostMapper.toDTOList(postDAO.findAllPostsByFavouriteCategory(cat));
+        dtos.forEach(dto -> {
+            Learner author = learnerDAO.findLearnerById(dto.getAuthorId());
+            byte[] img = author.getPersonalImage();
+            if (img != null && img.length > 0) {
+                String b64 = Base64.getEncoder().encodeToString(img);
+                dto.setAuthorImage("data:image/jpeg;base64," + b64);
+            }
+        });
+        return dtos;
     }
+
 
     // retrieves all posts that suits selected category.
     public List<PostDTO> getPostsBySelectedCategory(String category) {
