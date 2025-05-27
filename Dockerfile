@@ -1,11 +1,24 @@
-# Build stage
-FROM maven:3.8.5-openjdk-17 AS build
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+# Use Maven image to build the project
+FROM maven:3.8.6-openjdk-17 AS build
 
-# Package stage
-FROM openjdk:17-jdk-slim
+# Set the working directory inside the container
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+
+# Copy the Maven project files into the container
+COPY learn-bridge-back-end/pom.xml ./learn-bridge-back-end/
+COPY learn-bridge-back-end/src ./learn-bridge-back-end/src
+
+# Navigate to the project directory and build the project
+RUN mvn -f learn-bridge-back-end/pom.xml clean package -DskipTests
+
+# Use a lightweight Java image to run the application
+FROM openjdk:17-jdk-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the built jar file from the previous stage
+COPY --from=build /app/learn-bridge-back-end/target/*.jar app.jar
+
+# Define the command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
