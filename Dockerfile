@@ -1,24 +1,24 @@
-# Use Maven image to build the project
-FROM maven:3.8.6-eclipse-temurin-17 AS build
+# Build Stage
+FROM maven:3.9.9-amazoncorretto-17 AS build
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy the Maven project files into the container
+# Copy project files
 COPY learn-bridge-back-end/pom.xml ./learn-bridge-back-end/
 COPY learn-bridge-back-end/src ./learn-bridge-back-end/src
 
-# Navigate to the project directory and build the project
+# Build the application
 RUN mvn -f learn-bridge-back-end/pom.xml clean package -DskipTests
 
-# Use a lightweight Java image to run the application
-FROM eclipse-temurin:17-jdk-slim
+# Runtime Stage
+FROM amazoncorretto:17
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy the built jar file from the previous stage
+# Copy the jar file from the build stage
 COPY --from=build /app/learn-bridge-back-end/target/*.jar app.jar
 
-# Define the command to run the application
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
