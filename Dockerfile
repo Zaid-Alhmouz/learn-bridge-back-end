@@ -1,24 +1,26 @@
-# Build Stage
-FROM maven:3.9.9-amazoncorretto-17 AS build
+# Stage 1: Build the application using Maven and Amazon Corretto 17
+FROM maven:3.9.6-amazoncorretto-17 AS build
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy project files
-COPY learn-bridge-back-end/pom.xml ./learn-bridge-back-end/
-COPY learn-bridge-back-end/src ./learn-bridge-back-end/src
+# Copy the project files into the container
+COPY . .
 
-# Build the application
-RUN mvn -f learn-bridge-back-end/pom.xml clean package -DskipTests
+# Build the application, skipping tests
+RUN mvn clean package -DskipTests
 
-# Runtime Stage
+# Stage 2: Run the application using Amazon Corretto 17
 FROM amazoncorretto:17
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the jar file from the build stage
-COPY --from=build /app/learn-bridge-back-end/target/*.jar app.jar
+# Copy the built JAR file from the build stage
+COPY --from=build /app/target/*.jar app.jar
 
-# Run the application
+# Expose the application's port (adjust if necessary)
+EXPOSE 8080
+
+# Define the command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
