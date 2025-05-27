@@ -1,5 +1,5 @@
 # Use Maven image to build the project
-FROM maven:3.8.6-openjdk-17 AS build
+FROM maven:3.8.6-eclipse-temurin-17 AS build
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -12,7 +12,7 @@ COPY learn-bridge-back-end/src ./learn-bridge-back-end/src
 RUN mvn -f learn-bridge-back-end/pom.xml clean package -DskipTests
 
 # Use a lightweight Java image to run the application
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-slim
 
 # Set the working directory inside the container
 WORKDIR /app
