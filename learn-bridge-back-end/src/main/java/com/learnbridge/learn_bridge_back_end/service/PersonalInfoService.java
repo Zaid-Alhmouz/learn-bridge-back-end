@@ -112,10 +112,7 @@ public class PersonalInfoService {
         return dataUri;
     }
 
-    /**
-     * Updates textual personal info fields. Image bytes are handled
-     * separately via storeProfileImage().
-     */
+
     public void editPersonalInfo(PersonalInfoDTO dto, SecurityUser loggedUser) {
         Long userId = loggedUser.getUser().getId();
         User user = userDAO.findUserById(userId);

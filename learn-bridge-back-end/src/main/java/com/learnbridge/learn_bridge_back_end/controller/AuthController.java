@@ -114,7 +114,7 @@ public class AuthController {
     }
 
     @PostMapping("/admin/create-admin")
-//    @PreAuthorize("hasRole('ADMIN')") Remove this to create admins peacefully...
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createAdmin(@Valid @RequestBody UserRegistrationRequest request) {
         if (userDAO.findUserByEmail(request.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists");

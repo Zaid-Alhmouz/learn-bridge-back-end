@@ -38,9 +38,7 @@ public class ReviewService {
     private ChatDAO chatDAO;
 
 
-    /**
-     * Add a review using chatId. Determines session and who reviews whom based on role.
-     */
+
     public ReviewDTO addReviewByChat(
             Long chatId,
             Long reviewerId,
@@ -87,9 +85,7 @@ public class ReviewService {
         return ReviewMapper.toDTO(saved);
     }
 
-    /**
-     * Delete a review by chatId and reviewer. Looks up the rating by session and reviewer.
-     */
+
     public ReviewDTO deleteReviewByChat(Long chatId, Long reviewerId) {
         Chat chat = chatDAO.findChatById(chatId);
         if (chat == null) throw new RuntimeException("Chat not found: " + chatId);
@@ -125,9 +121,7 @@ public class ReviewService {
         return ReviewMapper.toDTOList(instructorRatings);
     }
 
-    /**
-     * Returns a list of ReviewSummaryDTO for all reviews received by the given instructor.
-     */
+
     public List<ReviewSummaryDTO> getReviewsByInstructor(Long instructorId) {
         List<Rating> ratings = ratingDAO.findRatingsByInstructorId(instructorId);
 

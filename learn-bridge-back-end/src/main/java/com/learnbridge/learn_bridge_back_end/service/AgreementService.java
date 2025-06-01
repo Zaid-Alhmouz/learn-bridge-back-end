@@ -101,7 +101,7 @@ public class AgreementService {
         Agreement ag = new Agreement();
         ag.setLearner(learner);
         ag.setInstructor(instructor);
-        // no Post → store instructor’s avgPrice on the agreement itself (if you’ve added `price`)
+
         ag.setPrice(instructor.getAvgPrice());
 
         Agreement saved = agreementDAO.saveAgreement(ag);
@@ -135,10 +135,10 @@ public class AgreementService {
             dto.setPostSSubject(agreement.getPost().getSubject());
             dto.setPostStatus(agreement.getPost().getPostStatus().toString());
         } else {
-            // learner-initiated: no post
+
             dto.setPostSSubject("N/A");
             dto.setPostStatus("N/A");
-            // if you’ve added a price field on Agreement, you could also:
+
             // dto.setPrice( agreement.getPrice().toString() );
         }
 

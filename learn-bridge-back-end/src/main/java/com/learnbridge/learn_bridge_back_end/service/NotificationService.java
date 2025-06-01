@@ -19,9 +19,9 @@ public class NotificationService {
     @Autowired
     private NotificationsDAO notificationsDAO;
 
-    /**
-     * Create notification when an instructor requests an agreement
-     */
+
+    // create notification when an instructor requests an agreement
+
     @Transactional
     public Notifications createAgreementRequestNotification(Agreement agreement) {
         Notifications notification = new Notifications();

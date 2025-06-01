@@ -85,7 +85,7 @@ public class ChatController {
             List<ChatSummaryDTO> chats = chatService.getAllChatsForUser(userId, role);
             return ResponseEntity.ok(chats != null ? chats : Collections.emptyList());
         } catch (Exception e) {
-            // on any unexpected error, return empty list rather than 500
+
             return ResponseEntity.ok(Collections.emptyList());
         }
     }

@@ -94,7 +94,7 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public List<ChatSummaryDTO> getAllChatsForUser(Long userId, UserRole role) {
-        // 1) fetch sessions for this user & role
+        //  fetch sessions for this user & role
         List<Session> sessions;
         if (role == UserRole.INSTRUCTOR) {
             sessions = sessionDAO.findSessionByInstructorId(userId);
@@ -147,9 +147,7 @@ public class ChatService {
         return result;
     }
 
-    /**
-     * Retrieves full chat details for admin review.
-     */
+    // retrieves full chat details for admin review.
     @Transactional(readOnly = true)
     public AdminChatReviewDTO reviewChat(Long chatId) {
         Chat chat = chatDAO.findChatById(chatId);
@@ -165,14 +163,14 @@ public class ChatService {
         Long instructorId = session.getInstructor().getId();
         String instructorName = session.getInstructor().getFirstName() + " " + session.getInstructor().getLastName();
 
-        // Learner (assumes single participant)
+        // Learner
         SessionParticipants participant = session.getParticipants()
                 .stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("No learner participant found for session " + sessionId));
         Long learnerId = participant.getLearnerId();
         String learnerName = participant.getLearner().getFirstName() + " " + participant.getLearner().getLastName();
 
-        // Messages and files
+        // messages and files
         List<MessageDTO> messages = textMessageDAO.findTextMessageByChatId(chatId)
                 .stream().map(MessageDTO::new)
                 .collect(Collectors.toList());

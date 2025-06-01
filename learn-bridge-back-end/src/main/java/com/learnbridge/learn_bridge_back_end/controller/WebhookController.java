@@ -54,7 +54,7 @@ public class WebhookController {
                         .getObject().orElse(null));
                 break;
             default:
-                // Unexpected event type
+
                 break;
         }
         return ResponseEntity.ok("Received");
@@ -111,7 +111,7 @@ public class WebhookController {
         opt.ifPresent(info -> {
             info.setStripeTransferId(transfer.getId());
             paymentInfoDAO.updatePaymentInfo(info);
-            // Notify instructor of transfer
+
             notificationService.sendTransferNotification(
                     info.getCard().getUser(),
                     info.getAmount(),

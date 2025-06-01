@@ -22,9 +22,7 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
-    /**
-     * Add a review based on chatId; session, reviewer and reviewee are inferred by role.
-     */
+
     @PreAuthorize("hasRole('LEARNER')")
     @PostMapping("/add-review/{chatId}")
     public ResponseEntity<ReviewDTO> addReviewByChat(

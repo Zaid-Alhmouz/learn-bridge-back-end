@@ -24,16 +24,13 @@ public class FindInstructorService {
     @Autowired
     private InstructorDAO instructorDAO;
 
-    /**
-     * Retrieve instructors for the learner's favorite category,
-     * then fetch and Base64-encode each instructor's image.
-     */
+
     public List<InstructorDTO> findFavouriteInstructors(SecurityUser user) {
         String category = learnerDAO
                 .findLearnerById(user.getUser().getId())
                 .getFavouriteCategory();
 
-        // get stats-only DTOs
+        // get DTOs
         List<InstructorDTO> instructors = repo.findStatsByCategory(category);
 
         // for each, load raw entity, encode, and set personalImage
@@ -49,10 +46,7 @@ public class FindInstructorService {
         return instructors;
     }
 
-    /**
-     * Retrieve instructors for the selected category,
-     * then fetch and Base64-encode each instructor's image.
-     */
+
     public List<InstructorDTO> findSelectedCategoryInstructors(String selectedCategory) {
         // get stats-only DTOs
         List<InstructorDTO> instructors = repo.findStatsByCategory(selectedCategory);
@@ -70,10 +64,7 @@ public class FindInstructorService {
         return instructors;
     }
 
-    /**
-     * View single instructor profile (stats-only).
-     * If you also need the image here, repeat the Base64-encode step:
-     */
+
     public InstructorDTO viewProfile(Long instructorId) {
         InstructorDTO dto = repo.findStatsById(instructorId)
                 .orElseThrow(() -> new RuntimeException("Instructor not found: " + instructorId));

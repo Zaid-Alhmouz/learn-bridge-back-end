@@ -73,7 +73,7 @@ public class AgreementWorkflowService {
         post.setPostStatus(PostStatus.ON_HOLD);
         postDAO.updatePost(post);
 
-        // Create a session from the agreement
+        // create a session from the agreement
         return sessionService.createSessionFromInstructorAgreement(agreement.getAgreementId());
     }
 
@@ -118,7 +118,7 @@ public class AgreementWorkflowService {
         return sessionService.createSessionFromLearnerAgreement(ag.getAgreementId());
     }
 
-    /** Instructor rejects a learner-initiated request */
+
     @Transactional
     public void rejectLearnerRequest(Long notificationId) {
         notificationsService.markNotificationAsRead(notificationId);

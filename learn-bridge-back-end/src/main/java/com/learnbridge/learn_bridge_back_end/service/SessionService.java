@@ -30,12 +30,10 @@ public class SessionService {
     @Autowired private StripeService stripeService;
     @Autowired private NotificationService notificationService;
 
-    /**
-     * Creates a new session from an existing agreement:
-     *  - Authorizes funds on learner's card
-     *  - Persists PaymentInfo
-     *  - Creates Session, Chat, and participants
-     */
+
+
+
+
     @Transactional
     public SessionDTO createSessionFromInstructorAgreement(Long agreementId) throws StripeException {
         Agreement agreement = agreementDAO.findAgreementById(agreementId);
@@ -43,14 +41,14 @@ public class SessionService {
             throw new IllegalArgumentException("Agreement not found: " + agreementId);
         }
 
-        // Authorize payment
+        // authorize payment
         long amountCents = agreement.getPrice().multiply(new BigDecimal(100)).longValue();
         Card learnerCard = cardDAO.findDefaultCardByUserId(agreement.getLearner().getLearnerId());
         String customerId = agreement.getLearner().getUser().getStripeCustomerId();
         String paymentMethodId = learnerCard.getStripePaymentMethodId();
         PaymentIntent pi = stripeService.authorizePayment(amountCents, "usd", customerId, paymentMethodId);
 
-        // Persist payment info
+        // persist payment info
         PaymentInfo info = new PaymentInfo();
         info.setUser(agreement.getLearner().getUser());
         info.setCard(learnerCard);
@@ -61,7 +59,7 @@ public class SessionService {
         info.setReceiverName(agreement.getInstructor().getFirstName() + " " + agreement.getInstructor().getLastName());
         paymentInfoDAO.savePaymentInfo(info);
 
-        // Create session
+        // create session
         Session session = new Session();
         session.setAgreement(agreement);
         session.setTransaction(info);
@@ -71,13 +69,13 @@ public class SessionService {
         session.setParticipants(new HashSet<>());
         Session saved = sessionDAO.saveSession(session);
 
-        // Create chat
+        // create chat
         Chat chat = new Chat();
         chat.setSession(saved);
         chat.setMessages(new HashSet<>());
         chatDAO.saveChat(chat);
 
-        // Add only the learner as a participant
+        // add only the learner as a participant
         SessionParticipants learnerPart = new SessionParticipants(
                 saved.getSessionId(),
                 agreement.getLearner().getLearnerId()
@@ -95,9 +93,7 @@ public class SessionService {
     }
 
 
-    /**
-     * Captures authorized funds, transfers to instructor, and marks session finished
-     */
+    // captures authorized funds, transfers to instructor, and marks session finished
     @Transactional
     public SessionDTO finishSession(Long sessionId, Long finisherId) throws StripeException {
         //  Load session
@@ -120,7 +116,7 @@ public class SessionService {
             throw new IllegalStateException("No charge associated with the PaymentIntent.");
         }
 
-        // 4. Transfer funds to the instructor’s CONNECT account (mock in test mode)
+        // transfer funds to the instructor’s CONNECT account (mock in test mode)
         long amountCents = learnerPaymentInfo.getAmount().multiply(new BigDecimal(100)).longValue();
         String transferId;
         if (stripeService.isTestMode()) {

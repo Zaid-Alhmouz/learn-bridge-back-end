@@ -65,9 +65,7 @@ public class ReportController {
         }
     }
 
-    /**
-     * Delete the report (no money movement), returning the deleted DTO.
-     */
+
     @DeleteMapping("/delete/{reportId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportDTO> deleteReport(@PathVariable Long reportId) {

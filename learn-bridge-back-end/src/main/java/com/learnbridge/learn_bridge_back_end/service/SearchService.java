@@ -40,7 +40,7 @@ public class SearchService {
             posts = postDAO.searchPosts(searchDTO.getKeyword());
         }
 
-        // Convert Post entities to PostDTO objects
+        // convert Post entities to PostDTO objects
         return posts.stream()
                 .map(PostDTO::new)
                 .collect(Collectors.toList());

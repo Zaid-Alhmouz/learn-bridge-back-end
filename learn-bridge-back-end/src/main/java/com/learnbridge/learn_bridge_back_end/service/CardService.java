@@ -42,10 +42,7 @@ public class CardService {
     private InstructorDAO instructorDAO;
 
 
-    /**
-     * Adds a new payment card for a user.
-     * Supports both secure tokenized approach (paymentMethodId) and raw card details.
-     */
+
     @Transactional
     public AddCardResponse addCard(AddCardRequest request, Long userId) throws StripeException {
         // 0) Lookup user
