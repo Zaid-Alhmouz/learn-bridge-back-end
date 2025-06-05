@@ -35,7 +35,9 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of(
                 "http://localhost:4200",
-                "https://learn-bridge-ui.onrender.com"  
+                "https://learn-bridge-ui.onrender.com",
+                "https://just-learn-bridge.netlify.app"
+
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
